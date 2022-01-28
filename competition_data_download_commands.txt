@@ -1,0 +1,2 @@
+set KAGGLE_CONFIG_DIR=C:\Users\MSI Leopard\Desktop\Help-Protect-the-Great-Barrier-Reef
+kaggle competitions download -c tensorflow-great-barrier-reef
