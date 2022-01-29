@@ -7,10 +7,15 @@ from csv import reader as csv_reader
 from json import loads as json_loads
 from os import getcwd
 from os.path import join as path_join
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 # pylint: disable=import-error
+from tensorflow import (
+    convert_to_tensor, float32 as tf_float32, int64 as tf_int64, py_function,
+    Tensor, uint8 as tf_uint8
+)
 from tensorflow.data import AUTOTUNE, Dataset
+from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
 
@@ -46,7 +51,7 @@ def label_line_into_image_path_to_bounding_boxes_dict(
     )
 
     return {
-        image_path: bounding_boxes
+        bytes(image_path, 'utf-8'): 0  # bounding_boxes
     }
 
 
@@ -85,8 +90,30 @@ def load_labels_as_paths_to_bounding_boxes_dict() -> Dict[
 IMAGE_PATHS_TO_BOUNDING_BOXES = load_labels_as_paths_to_bounding_boxes_dict()
 
 
-# .cache().prefetch(buffer_size=AUTOTUNE)
-# lambda image_path: paths_to_bounding_boxes[image_path]
+def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
+    """
+    Load the sample and get the label - representing bounding boxes - of the
+    image represented by the input path.
+    """
+    try:
+        return (
+            decode_jpeg(
+                contents=read_file(
+                    filename=image_path
+                )
+            ),
+            convert_to_tensor(
+                value=IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()],  # FIXME: array of separate tensors
+                dtype=tf_int64
+            )
+        )
+    except Exception:
+        print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n', IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]['x'])
+        raise Exception()
+
+
+# TODO: .cache().prefetch(buffer_size=AUTOTUNE)
+# TODO: .map() to preprocess sample vs preprocessing layer in the network?
 
 
 if __name__ == '__main__':
@@ -94,5 +121,21 @@ if __name__ == '__main__':
         tensors=[*IMAGE_PATHS_TO_BOUNDING_BOXES]  # only keys included
     )
 
-    for i, path in enumerate(image_paths_dataset):
-        if i < 5: print(path)
+    samples_and_labels_dataset = image_paths_dataset.map(
+        map_func=lambda image_path: py_function(
+            func=load_sample_and_get_label,
+            inp=[image_path],
+            Tout=(tf_uint8, tf_int64)
+        ),
+        num_parallel_calls=AUTOTUNE,  # TODO
+        deterministic=True
+    )
+
+    for i, sample_and_label in enumerate(samples_and_labels_dataset):
+        if i < 5:
+            print(sample_and_label[0])
+            print(sample_and_label[1])
+        else:
+            break
+        if i % 1000 == 0: print(i)
+    print(i)
