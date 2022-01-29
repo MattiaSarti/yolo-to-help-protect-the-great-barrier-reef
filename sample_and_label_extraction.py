@@ -139,13 +139,22 @@ if __name__ == '__main__':
         deterministic=True
     )
 
+    l = [6, 43, 84, 6619]
+    d = {
+        6: (0, 0),
+        43: (0, 1),
+        84: (1, 0),
+        6619: (1, 1),
+    }
+    _, axes = subplots(2, 2)
     for i, sample_and_label in enumerate(samples_and_labels_dataset):
-        if i in (6, 43, 84, 6619):
-            _, axes = subplots()
-            axes.imshow(sample_and_label[0].numpy())
-            print()
+        if i in l:
+            print('.')
+            r, c = d[i]
+            l.remove(i)
+            axes[r, c].imshow(sample_and_label[0].numpy())
             for bounding_box in sample_and_label[1].numpy().tolist():
-                axes.add_patch(
+                axes[r, c].add_patch(
                     p=Rectangle(
                         xy=(bounding_box[0], bounding_box[1]),
                         width=bounding_box[2],
@@ -155,6 +164,6 @@ if __name__ == '__main__':
                         facecolor='none'
                     )
                 )
-            show()
-        else:
-            continue  # break
+        if l == []:  # else:
+            break
+    show()
