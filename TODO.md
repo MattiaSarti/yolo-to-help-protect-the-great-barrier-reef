@@ -9,6 +9,7 @@
     - [x] number of test images: ~ 13000
 
 ## To Be Implemented:
+- [ ] data augmentation
 - [ ] cross validation
 - [ ] checkpoint averaging
 - [ ] run many experiments
