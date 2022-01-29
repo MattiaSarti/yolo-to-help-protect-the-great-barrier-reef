@@ -8,7 +8,10 @@ from json import loads as json_loads
 from os import getcwd
 from os.path import join as path_join
 from typing import Dict, List, Tuple
+from unittest.mock import patch
 
+from matplotlib.patches import Rectangle
+from matplotlib.pyplot import show, subplots
 # pylint: disable=import-error
 from tensorflow import (
     convert_to_tensor, float32 as tf_float32, int64 as tf_int64, py_function,
@@ -51,7 +54,7 @@ def label_line_into_image_path_to_bounding_boxes_dict(
     )
 
     return {
-        bytes(image_path, 'utf-8'): 0  # bounding_boxes
+        bytes(image_path, 'utf-8'): bounding_boxes
     }
 
 
@@ -102,7 +105,16 @@ def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
             )
         ),
         convert_to_tensor(
-            value=IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()],  # FIXME: array of separate tensors
+            # bounding boxes as network output values:
+            value=[
+                [
+                    bounding_box_dict['x'],
+                    bounding_box_dict['y'],
+                    bounding_box_dict['width'],
+                    bounding_box_dict['height']
+                ] for bounding_box_dict in
+                IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]
+            ],
             dtype=tf_int64
         )
     )
@@ -128,10 +140,21 @@ if __name__ == '__main__':
     )
 
     for i, sample_and_label in enumerate(samples_and_labels_dataset):
-        if i < 5:
-            print(sample_and_label[0])
-            print(sample_and_label[1])
+        if i in (6, 43, 84, 6619):
+            _, axes = subplots()
+            axes.imshow(sample_and_label[0].numpy())
+            print()
+            for bounding_box in sample_and_label[1].numpy().tolist():
+                axes.add_patch(
+                    p=Rectangle(
+                        xy=(bounding_box[0], bounding_box[1]),
+                        width=bounding_box[2],
+                        height=bounding_box[3],
+                        linewidth=2,
+                        edgecolor='#00ff00',
+                        facecolor='none'
+                    )
+                )
+            show()
         else:
-            break
-        if i % 1000 == 0: print(i)
-    print(i)
+            continue  # break
