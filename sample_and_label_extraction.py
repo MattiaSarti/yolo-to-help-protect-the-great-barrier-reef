@@ -95,21 +95,17 @@ def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
     Load the sample and get the label - representing bounding boxes - of the
     image represented by the input path.
     """
-    try:
-        return (
-            decode_jpeg(
-                contents=read_file(
-                    filename=image_path
-                )
-            ),
-            convert_to_tensor(
-                value=IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()],  # FIXME: array of separate tensors
-                dtype=tf_int64
+    return (
+        decode_jpeg(
+            contents=read_file(
+                filename=image_path
             )
+        ),
+        convert_to_tensor(
+            value=IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()],  # FIXME: array of separate tensors
+            dtype=tf_int64
         )
-    except Exception:
-        print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n', IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]['x'])
-        raise Exception()
+    )
 
 
 # TODO: .cache().prefetch(buffer_size=AUTOTUNE)
