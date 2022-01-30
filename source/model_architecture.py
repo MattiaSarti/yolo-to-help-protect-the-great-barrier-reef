@@ -26,6 +26,8 @@ def build_fully_convolutional_yolov3_architecture() -> Model:
 
     raise NotImplementedError
 
+    # TODO: assert xxx.shape[yyy] == N_ANCHORS
+
     return Model(
         inputs=inputs,
         outputs=[]
