@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 from unittest.mock import patch
 
 from matplotlib.patches import Rectangle
-from matplotlib.pyplot import show, subplots
+from matplotlib.pyplot import pause as plt_pause, show as plt_show, subplots
 # pylint: disable=import-error
 from tensorflow import (
     convert_to_tensor, float32 as tf_float32, int64 as tf_int64, py_function,
@@ -139,31 +139,57 @@ if __name__ == '__main__':
         deterministic=True
     )
 
-    l = [6, 43, 84, 6619]
-    d = {
-        6: (0, 0),
-        43: (0, 1),
-        84: (1, 0),
-        6619: (1, 1),
-    }
-    _, axes = subplots(2, 2)
-    for i, sample_and_label in enumerate(samples_and_labels_dataset):
-        if i in l:
-            print('.')
-            r, c = d[i]
-            l.remove(i)
-            axes[r, c].imshow(sample_and_label[0].numpy())
-            for bounding_box in sample_and_label[1].numpy().tolist():
-                axes[r, c].add_patch(
-                    p=Rectangle(
-                        xy=(bounding_box[0], bounding_box[1]),
-                        width=bounding_box[2],
-                        height=bounding_box[3],
-                        linewidth=2,
-                        edgecolor='#00ff00',
-                        facecolor='none'
-                    )
+    # # l = [6, 43, 84, 6619]
+    # # l = list(range(40, 50))
+    # # d = {
+    # #     l[0]: (0, 0),
+    # #     l[1]: (0, 1),
+    # #     l[2]: (1, 0),
+    # #     l[3]: (1, 1),
+    # # }
+    # # _, axes = subplots(2, 2)
+    # figure, axes = subplots(1, 1)
+    # for i, sample_and_label in enumerate(samples_and_labels_dataset):
+    #     if i in l:
+    #         # print('.')
+    #         # r, c = d[i]
+    #         # l.remove(i)
+    #         # axes[r, c].imshow(sample_and_label[0].numpy())
+    #         axes.imshow(sample_and_label[0].numpy())
+    #         for bounding_box in sample_and_label[1].numpy().tolist():
+    #             # axes[r, c].add_patch(
+    #             axes.add_patch(
+    #                 p=Rectangle(
+    #                     xy=(bounding_box[0], bounding_box[1]),
+    #                     width=bounding_box[2],
+    #                     height=bounding_box[3],
+    #                     linewidth=2,
+    #                     edgecolor='#00ff00',
+    #                     facecolor='none'
+    #                 )
+    #             )
+    #     show(block=False)
+    #     pause(0.001)
+    #     axes.clear()
+    #     # if l == []:  # else:
+    #     #     break
+
+    figure, axes = subplots(1, 1)
+    for sample_and_label in samples_and_labels_dataset:
+        axes.clear()
+
+        axes.imshow(sample_and_label[0].numpy())
+        for bounding_box in sample_and_label[1].numpy().tolist():
+            axes.add_patch(
+                p=Rectangle(
+                    xy=(bounding_box[0], bounding_box[1]),
+                    width=bounding_box[2],
+                    height=bounding_box[3],
+                    linewidth=2,
+                    edgecolor='#00ff00',
+                    facecolor='none'
                 )
-        if l == []:  # else:
-            break
-    show()
+            )
+
+        plt_show(block=False)
+        plt_pause(0.001)
