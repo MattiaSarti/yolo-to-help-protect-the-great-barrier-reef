@@ -12,4 +12,18 @@
 - [ ] data augmentation
 - [ ] cross validation
 - [ ] checkpoint averaging
+- [ ] post processing to turn model outputs into predictions of boundinx boxes
 - [ ] run many experiments
+
+
+# Observations for Optimization
+
+## Unnecessary Characteristics:
+- [x] model:
+    - [x] no need to support more classes
+    - [x] no need to support variable input sizes
+
+## Necessary Characteristics:
+- [x] inputs:
+    - [x] need to keep a high enough resolution, since coral-eating crown-of-thorns starfishes look difficult to distiguish from the surrounding background even to the human eye - assumed to be the gold standard creating labels in this problem - and a lower resolution would confuse even the gold standard (after manual inspection)
+    - [x] need for many anchors, as coral-eating crown-of-thorns starfishes are presented as very small in the training/validation samples (after manual inspection)
