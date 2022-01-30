@@ -22,6 +22,7 @@
 - [x] model:
     - [x] no need to support more classes
     - [x] no need to support variable input sizes
+    - [x] not reasonable to fine tune a model pretrained on another "general" dataset as the features necessary to detect coral-eating crown-of-thorns starfishes look - after manual inspection - very different from the patterns that allow to distinguish most "general" classes objects
 
 ## Necessary Characteristics:
 - [x] inputs:
