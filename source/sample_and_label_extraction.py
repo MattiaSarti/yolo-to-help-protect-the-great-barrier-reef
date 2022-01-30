@@ -6,7 +6,7 @@ feeding the model.
 
 from csv import reader as csv_reader
 from json import loads as json_loads
-from os import getcwd
+from os import getcwd, pardir
 from os.path import join as path_join
 from typing import Dict, List, Tuple
 from unittest.mock import patch
@@ -25,6 +25,7 @@ from tensorflow.io import decode_jpeg, read_file
 
 DATASET_DIR = path_join(
     getcwd(),
+    pardir,
     'tensorflow-great-barrier-reef'
 )
 LABELS_FILE_PATH = path_join(
