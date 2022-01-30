@@ -120,16 +120,16 @@ def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
     )
 
 
-# TODO: .cache().prefetch(buffer_size=AUTOTUNE)
-# TODO: .map() to preprocess sample vs preprocessing layer in the network?
-
-
-if __name__ == '__main__':
+def build_dataset_of_all_samples_and_labels() -> Dataset:
+    """
+    Build a TensorFlow dataset that can iterate over all the dataset samples
+    and the respective labels containing bounding boxes.
+    """
     image_paths_dataset = Dataset.from_tensor_slices(
         tensors=[*IMAGE_PATHS_TO_BOUNDING_BOXES]  # only keys included
     )
 
-    samples_and_labels_dataset = image_paths_dataset.map(
+    return image_paths_dataset.map(
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_label,
             inp=[image_path],
@@ -139,43 +139,18 @@ if __name__ == '__main__':
         deterministic=True
     )
 
-    # # l = [6, 43, 84, 6619]
-    # # l = list(range(40, 50))
-    # # d = {
-    # #     l[0]: (0, 0),
-    # #     l[1]: (0, 1),
-    # #     l[2]: (1, 0),
-    # #     l[3]: (1, 1),
-    # # }
-    # # _, axes = subplots(2, 2)
-    # figure, axes = subplots(1, 1)
-    # for i, sample_and_label in enumerate(samples_and_labels_dataset):
-    #     if i in l:
-    #         # print('.')
-    #         # r, c = d[i]
-    #         # l.remove(i)
-    #         # axes[r, c].imshow(sample_and_label[0].numpy())
-    #         axes.imshow(sample_and_label[0].numpy())
-    #         for bounding_box in sample_and_label[1].numpy().tolist():
-    #             # axes[r, c].add_patch(
-    #             axes.add_patch(
-    #                 p=Rectangle(
-    #                     xy=(bounding_box[0], bounding_box[1]),
-    #                     width=bounding_box[2],
-    #                     height=bounding_box[3],
-    #                     linewidth=2,
-    #                     edgecolor='#00ff00',
-    #                     facecolor='none'
-    #                 )
-    #             )
-    #     show(block=False)
-    #     pause(0.001)
-    #     axes.clear()
-    #     # if l == []:  # else:
-    #     #     break
 
-    figure, axes = subplots(1, 1)
-    for sample_and_label in samples_and_labels_dataset:
+def show_dataset_as_movie(ordered_samples_and_labels: Dataset) -> None:
+    """
+    Show the dataset images frame by frame, reconstructing the video
+    sequences, with boundinx boxes contained displayed over the respective
+    sample/frame.
+    """
+    _, axes = subplots(1, 1)
+    for index, sample_and_label in enumerate(ordered_samples_and_labels):
+        if index % 1000 == 0:
+            print(f"{index} frames shown")
+
         axes.clear()
 
         axes.imshow(sample_and_label[0].numpy())
@@ -192,4 +167,16 @@ if __name__ == '__main__':
             )
 
         plt_show(block=False)
-        plt_pause(0.001)
+        plt_pause(0.000001)
+
+
+# TODO: .cache().prefetch(buffer_size=AUTOTUNE)
+# TODO: .map() to preprocess sample vs preprocessing layer in the network?
+
+
+if __name__ == '__main__':
+    samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
+
+    show_dataset_as_movie(
+        ordered_samples_and_labels=samples_and_labels_dataset
+    )
