@@ -4,6 +4,7 @@ Model architecture definition.
 
 
 # pylint: disable=import-error
+from tensorflow import Tensor
 from tensorflow.keras import Input, Model
 # pylint: enable=import-error
 
@@ -13,32 +14,53 @@ IMAGE_N_COLUMNS = 1280
 IMAGE_N_CHANNELS = 3
 
 
-def build_model_architecture() -> Model:
+def build_fully_convolutional_yolov3_architecture() -> Model:
     """
-    Return an instance of the herein defined model architecture.
+    Return an instance of the herein defined YOLOv3 model architecture that
+    represents its fully-convolutional part, that is excluding bounding boxes'
+    postprocessing (filtering & aggregation).
     """
     inputs = Input(
         shape=(IMAGE_N_ROWS, IMAGE_N_COLUMNS, IMAGE_N_CHANNELS)
     )
 
-    # ------------------------------------------------------------------------
-    # ALTERNATIVE SOLUTION IF MORE FLEXIBILITY IS REQUIRED:
-    #
-    # class MyModel(tf.keras.Model):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
-    #         self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
-    #         self.dropout = tf.keras.layers.Dropout(0.5)
-    #     def call(self, inputs, training=False):
-    #         x = self.dense1(inputs)
-    #         if training:
-    #             x = self.dropout(x, training=training)
-    #         return self.dense2(x)
-    #     model = MyModel()
-    # ------------------------------------------------------------------------
+    raise NotImplementedError
 
     return Model(
         inputs=inputs,
         outputs=[]
     )
+
+
+class YOLOv3Variant(Model):
+    """
+    Customized architecture variant of YOLOv3.
+    """
+
+    def __init__(self) -> None:
+        super(YOLOv3Variant, self).__init__()
+
+        self.yolov3_fcn = build_fully_convolutional_yolov3_architecture()
+
+    def call(self, inputs: Tensor, training : bool = False) -> Tensor:
+        """
+        Forward propagation definition.
+        """
+        # passing the inputs through the fully-convolutional network:
+        x = self.yolov3_fcn(
+            inputs=inputs,
+            training=training
+        )
+
+        # post-processing the bounding boxes outputs to return only the final,
+        # filtered and aggregated ones:
+        raise NotImplementedError
+
+        return x
+
+
+if __name__ == '__main__':
+    model = YOLOv3Variant()
+
+    model.summary()
+    # model.plot_model(...)
