@@ -25,7 +25,7 @@
     - [ ] no need to support variable input sizes
     - [ ] not reasonable to fine tune a model pretrained on another "general" dataset as the features necessary to detect coral-eating crown-of-thorns starfishes look - after manual inspection - very different from the patterns that allow to distinguish most "general" classes' objects
     - [ ] need for a model capable on outputting close bounding boxes, as coral-eating crown-of-thorns starfishes are presented as very small in the training/validation samples (after manual inspection)
-    - [ ] since - after manual inspection - often coral-eating crown-of-thorns starfishes appear very small and very close within the same video frame, the model architecture must be allow for an acute enough resolution
+    - [ ] since - after manual inspection - often coral-eating crown-of-thorns starfishes appear very small and very close within the same video frame, the model architecture must allow for an acute enough resolution
 - [ ] training:
     - [ ] most frames do not contain bounding boxes, or only one ⇒ balance samples based on number of bounding boxes contained while training, but keep the original unbalance for validation, which reflects test-time conditions
 
