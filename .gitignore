@@ -1,5 +1,8 @@
+# Python's cache:
+__pycache__/
+
 # competition examples and dataset folder:
-tensorflow-great-barrier-reef/
+/tensorflow-great-barrier-reef/
 
 # credentials for my Kaggle account:
-kaggle.json
+/kaggle.json
