@@ -1,5 +1,6 @@
 """
-TODO
+Sample and label extraction from the raw dataset files and preprocessing for
+feeding the model.
 """
 
 
@@ -175,8 +176,8 @@ def show_dataset_as_movie(ordered_samples_and_labels: Dataset) -> None:
 
 
 if __name__ == '__main__':
-    samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
+    all_samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
 
     show_dataset_as_movie(
-        ordered_samples_and_labels=samples_and_labels_dataset
+        ordered_samples_and_labels=all_samples_and_labels_dataset
     )
