@@ -27,7 +27,7 @@
 
 ## Unnecessary Characteristics:
 - [ ] model:
-    - [ ] no need to support more classes
+    - [ ] no need to support more classes ⇒ no need (for each anchor/grid part) to have different outputs for object presence score and class probability, they can be fused in a single output representing the probability of presence of coral-eating crown-of-thorns starfishes
     - [ ] no need to support variable input sizes
     - [ ] not reasonable to fine tune a model pretrained on another "general" dataset as the features necessary to detect coral-eating crown-of-thorns starfishes look - after manual inspection - very different from the patterns that allow to distinguish most "general" classes' objects
     - [ ] need for a model capable on outputting close bounding boxes, as coral-eating crown-of-thorns starfishes are presented as very small in the training/validation samples (after manual inspection)
