@@ -13,6 +13,8 @@ IMAGE_N_ROWS = 720
 IMAGE_N_COLUMNS = 1280
 IMAGE_N_CHANNELS = 3
 
+LEAKY_RELU_NEGATIVE_SLOPE = 0.1
+
 
 def build_fully_convolutional_yolov3_architecture() -> Model:
     """
@@ -25,6 +27,7 @@ def build_fully_convolutional_yolov3_architecture() -> Model:
     )
 
     raise NotImplementedError
+    #tf.keras.activations.relu(x, alpha=LEAKY_RELU_NEGATIVE_SLOPE)
 
     # TODO: assert xxx.shape[yyy] == N_ANCHORS
 
