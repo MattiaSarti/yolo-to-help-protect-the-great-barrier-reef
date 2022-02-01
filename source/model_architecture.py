@@ -8,10 +8,8 @@ from tensorflow import Tensor
 from tensorflow.keras import Input, Model
 # pylint: enable=import-error
 
+from common_constants import IMAGE_N_ROWS, IMAGE_N_COLUMNS, IMAGE_N_CHANNELS
 
-IMAGE_N_ROWS = 720
-IMAGE_N_COLUMNS = 1280
-IMAGE_N_CHANNELS = 3
 
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
 
