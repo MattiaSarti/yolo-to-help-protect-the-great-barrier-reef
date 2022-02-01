@@ -7,7 +7,7 @@
     - [x] temporal information: available, in terms of previous/following frame
     - [x] number of training-plus-validation images: 23501
     - [x] number of test images: ~ 13000
-    - [x] bounding boxes statistics
+    - [x] bounding boxes statistics: see docs & code
 - [ ] preprocessing:
     - [ ] which for of input image normalization is better? absolute (relative to the training set overall statistics) or relative (each sample normalized to have given mean and std)?
 

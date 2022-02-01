@@ -5,6 +5,7 @@ feeding the model.
 
 
 from csv import reader as csv_reader
+from itertools import combinations
 from json import loads as json_loads
 from os import getcwd, pardir
 from os.path import join as path_join
@@ -73,25 +74,41 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         - total number of empty images
         - average bounding box height [pixels]
         - average bounding box width [pixels]
+        - average bounding boxes' centers x-coord distance [pixels]
+        - average bounding boxes' centers y-coord distance [pixels]
         - minimum bounding box height [pixels]
         - minimum bounding box width [pixels]
+        - minimum bounding boxes' centers x-coord distance [pixels]
+        - minimum bounding boxes' centers y-coord distance [pixels]
         - maximum bounding box height [pixels]
         - maximum bounding box width [pixels]
+        - maximum bounding boxes' centers x-coord distance [pixels]
+        - maximum bounding boxes' centers y-coord distance [pixels]
         - histogram of number of bounding boxes per image
-        TODO: average, minimum and maximum inter-bounding box distance (both for height and for width)
+        - histogram of bounding boxes' centers x-coord distance [pixels]
+        - histogram of bounding boxes' centers y-coord distance [pixels]
     """
     total_n_images = len(IMAGE_PATHS_TO_BOUNDING_BOXES)
 
+    bounding_boxes_centers_x_coord_distances_for_histogram = []
+    bounding_boxes_centers_y_coord_distances_for_histogram = []
     cumulative_bounding_box_height = 0
     cumulative_bounding_box_width = 0
+    cumulative_bounding_boxes_centers_x_coord_distance = 0
+    cumulative_bounding_boxes_centers_y_coord_distance = 0
     minimum_bounding_box_height = 99999
     minimum_bounding_box_width = 99999
+    minimum_bounding_boxes_centers_x_coord_distance = 99999
+    minimum_bounding_boxes_centers_y_coord_distance = 99999
     minimum_n_bounding_boxes_per_image = 99999
     maximum_bounding_box_height = 0
     maximum_bounding_box_width = 0
+    maximum_bounding_boxes_centers_x_coord_distance = 0
+    maximum_bounding_boxes_centers_y_coord_distance = 0
     maximum_n_bounding_boxes_per_image = 0
     n_bounding_boxes_per_image_for_histogram = []
     total_n_bounding_boxes = 0
+    total_n_bounding_boxes_center_distances_cumulated = 0
     total_n_empty_images = 0
 
     for image_bounding_boxes in IMAGE_PATHS_TO_BOUNDING_BOXES.values():
@@ -108,9 +125,17 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         if n_bounding_boxes == 0:
             total_n_empty_images += 1
 
+        bounding_boxes_centers_x_and_y_coords = []
         for bounding_box in image_bounding_boxes:
             cumulative_bounding_box_height += bounding_box['height']
             cumulative_bounding_box_width += bounding_box['width']
+
+            bounding_boxes_centers_x_and_y_coords.append(
+                {
+                    'x': bounding_box['x'] + bounding_box['height'],
+                    'y': bounding_box['y'] + bounding_box['width']
+                }
+            )
 
             if bounding_box['height'] < minimum_bounding_box_height:
                 minimum_bounding_box_height = bounding_box['height']
@@ -121,6 +146,63 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
                 maximum_bounding_box_height = bounding_box['height']
             if bounding_box['width'] > maximum_bounding_box_width:
                 maximum_bounding_box_width = bounding_box['width']
+        
+        if n_bounding_boxes > 1:
+            for centers_coords_pair in combinations(
+                    iterable=bounding_boxes_centers_x_and_y_coords,
+                    r=2
+            ):
+                total_n_bounding_boxes_center_distances_cumulated += 1
+
+                x_coord_difference = abs(
+                    centers_coords_pair[0]['x'] - centers_coords_pair[1]['x']
+                )
+                y_coord_difference = abs(
+                    centers_coords_pair[0]['y'] - centers_coords_pair[1]['y']
+                )
+
+                bounding_boxes_centers_x_coord_distances_for_histogram.append(
+                    x_coord_difference
+                )
+                bounding_boxes_centers_y_coord_distances_for_histogram.append(
+                    y_coord_difference
+                )
+
+                cumulative_bounding_boxes_centers_x_coord_distance += (
+                    x_coord_difference
+                )
+                cumulative_bounding_boxes_centers_y_coord_distance += (
+                    y_coord_difference
+                )
+
+                if (
+                        x_coord_difference <
+                        minimum_bounding_boxes_centers_x_coord_distance
+                ):
+                    minimum_bounding_boxes_centers_x_coord_distance = (
+                        x_coord_difference
+                    )
+                if (
+                        y_coord_difference <
+                        minimum_bounding_boxes_centers_y_coord_distance
+                ):
+                    minimum_bounding_boxes_centers_y_coord_distance = (
+                        y_coord_difference
+                    )
+
+                if (
+                        x_coord_difference >
+                        maximum_bounding_boxes_centers_x_coord_distance
+                ):
+                    maximum_bounding_boxes_centers_x_coord_distance = (
+                        x_coord_difference
+                    )
+                if (
+                    y_coord_difference > maximum_bounding_boxes_centers_y_coord_distance
+                ):
+                    maximum_bounding_boxes_centers_y_coord_distance = (
+                        y_coord_difference
+                    )
 
     print('- ' * 30)
     print("Bounding Boxes' Statistics:")
@@ -164,12 +246,40 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         )
     )
     print(
+        "\t- - average bounding boxes' centers x-coord distance [pixels]:",
+        round(
+            number=(
+                cumulative_bounding_boxes_centers_x_coord_distance /
+                total_n_bounding_boxes_center_distances_cumulated
+            ),
+            ndigits=2
+        )
+    )
+    print(
+        "\t- average bounding boxes' centers y-coord distance [pixels]:",
+        round(
+            number=(
+                cumulative_bounding_boxes_centers_y_coord_distance /
+                total_n_bounding_boxes_center_distances_cumulated
+            ),
+            ndigits=2
+        )
+    )
+    print(
         "\t- minimum bounding box height [pixels]:",
         minimum_bounding_box_height
     )
     print(
         "\t- minimum bounding box width [pixels]:",
         minimum_bounding_box_width
+    )
+    print(
+        "\t- - minimum bounding boxes' centers x-coord distance [pixels]:",
+        minimum_bounding_boxes_centers_x_coord_distance
+    )
+    print(
+        "\t- minimum bounding boxes' centers y-coord distance [pixels]:",
+        minimum_bounding_boxes_centers_y_coord_distance
     )
     print(
         "\t- maximum bounding box height [pixels]:",
@@ -180,7 +290,23 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         maximum_bounding_box_width
     )
     print(
+        "\t- - maximum bounding boxes' centers x-coord distance [pixels]:",
+        maximum_bounding_boxes_centers_x_coord_distance
+    )
+    print(
+        "\t- maximum bounding boxes' centers y-coord distance [pixels]:",
+        maximum_bounding_boxes_centers_y_coord_distance
+    )
+    print(
         "\t- histogram of number of bounding boxes per image: see plot"
+    )
+    print(
+        "\t- histogram of bounding boxes' centers x-coord distance [pixels]: " +
+        "see plot"
+    )
+    print(
+        "\t- histogram of bounding boxes' centers y-coord distance [pixels]: " +
+        "see plot"
     )
 
     plt_hist(
@@ -190,14 +316,55 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         color='skyblue',
         rwidth=0.8
     )
-    plt_title(label="Histogram of Number of Bounding Boxes per Image")
+    what_it_represent = "Histogram of Number of Bounding Boxes per Image"
+    plt_title(label=what_it_represent)
     plt_xticks(
         ticks=list(range(maximum_n_bounding_boxes_per_image))
     )
     plt_savefig(
         path_join(
             PICTURES_DIR,
-            'Histogram of Number of Bounding Boxes per Image.png'
+            what_it_represent + '.png'
+        )
+    )
+    plt_show(block=False)
+    plt_pause(interval=3)
+
+    plt_hist(
+        x=bounding_boxes_centers_x_coord_distances_for_histogram,
+        bins=100,
+        align='left',
+        color='skyblue',
+        rwidth=0.8
+    )
+    what_it_represent = (
+        "Histogram of Bounding Boxes' Centers X-Coordinate Distance [pixels]"
+    )
+    plt_title(label=what_it_represent)
+    plt_savefig(
+        path_join(
+            PICTURES_DIR,
+            what_it_represent + '.png'
+        )
+    )
+    plt_show(block=False)
+    plt_pause(interval=3)
+
+    plt_hist(
+        x=bounding_boxes_centers_y_coord_distances_for_histogram,
+        bins=100,
+        align='left',
+        color='skyblue',
+        rwidth=0.8
+    )
+    what_it_represent = (
+        "Histogram of Bounding Boxes' Centers Y-Coordinate Distance [pixels]"
+    )
+    plt_title(label=what_it_represent)
+    plt_savefig(
+        path_join(
+            PICTURES_DIR,
+            what_it_represent + '.png'
         )
     )
     plt_show(block=False)
