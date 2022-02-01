@@ -7,10 +7,7 @@
     - [x] temporal information: available, in terms of previous/following frame
     - [x] number of training-plus-validation images: 23501
     - [x] number of test images: ~ 13000
-    - [ ] bounding boxes statistics:
-        - [ ] average, minimum and maximum size (both for height and for width)
-        - [ ] average, minimum and maximum inter-bounding box distance (both for height and for width)
-        - [ ] average, minimum and maximum number of bounding boxes per frame (both for height and for width)
+    - [x] bounding boxes statistics
 - [ ] preprocessing:
     - [ ] which for of input image normalization is better? absolute (relative to the training set overall statistics) or relative (each sample normalized to have given mean and std)?
 
