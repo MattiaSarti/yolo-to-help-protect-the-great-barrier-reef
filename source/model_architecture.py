@@ -27,7 +27,7 @@ def build_fully_convolutional_yolov3_architecture() -> Model:
     )
 
     raise NotImplementedError
-    #tf.keras.activations.relu(x, alpha=LEAKY_RELU_NEGATIVE_SLOPE)
+    # tf.keras.activations.relu(x, alpha=LEAKY_RELU_NEGATIVE_SLOPE)
 
     # TODO: assert xxx.shape[yyy] == N_ANCHORS
 
@@ -37,7 +37,7 @@ def build_fully_convolutional_yolov3_architecture() -> Model:
     )
 
 
-class YOLOv3Variant(Model):
+class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-many-ancestors
     """
     Customized architecture variant of YOLOv3.
     """
@@ -47,12 +47,12 @@ class YOLOv3Variant(Model):
 
         self.yolov3_fcn = build_fully_convolutional_yolov3_architecture()
 
-    def call(self, inputs: Tensor, training : bool = False) -> Tensor:
+    def call(self, inputs: Tensor, training: bool = False) -> Tensor:  # noqa: E501 pylint: disable=arguments-differ
         """
         Forward propagation definition.
         """
         # passing the inputs through the fully-convolutional network:
-        x = self.yolov3_fcn(
+        fcn_outputs = self.yolov3_fcn(
             inputs=inputs,
             training=training
         )
@@ -61,7 +61,7 @@ class YOLOv3Variant(Model):
         # filtered and aggregated ones:
         raise NotImplementedError
 
-        return x
+        return fcn_outputs
 
 
 if __name__ == '__main__':

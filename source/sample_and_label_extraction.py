@@ -9,7 +9,6 @@ from json import loads as json_loads
 from os import getcwd, pardir
 from os.path import join as path_join
 from typing import Dict, List, Tuple
-from unittest.mock import patch
 
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import pause as plt_pause, show as plt_show, subplots
