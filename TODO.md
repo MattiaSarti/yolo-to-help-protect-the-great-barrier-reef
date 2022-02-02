@@ -36,3 +36,4 @@
 - [ ] inputs:
     - [ ] need to keep a high enough resolution, since coral-eating crown-of-thorns starfishes look difficult to distiguish from the surrounding background even to the human eye - assumed to be the gold standard creating labels in this problem - and a lower resolution would confuse even the gold standard (after manual inspection)
     - [ ] color looks relevant to distinguish coral-eating crown-of-thorns starfishes (after manual inspection)
+- [ ] the temporal information is useful, despite not all frames have the previous one actually reflecting a previous timestamp of the same video sequence
