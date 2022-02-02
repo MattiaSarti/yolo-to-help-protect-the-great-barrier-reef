@@ -14,14 +14,26 @@ from typing import Dict, List, Tuple
 
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import (
-    clf as plt_clf, figure as plt_figure, hist as plt_hist,
-    pause as plt_pause, savefig as plt_savefig, show as plt_show, subplots,
-    title as plt_title, xticks as plt_xticks
+    clf as plt_clf,
+    close as plt_close,
+    figure as plt_figure,
+    hist as plt_hist,
+    get_current_fig_manager,
+    pause as plt_pause,
+    savefig as plt_savefig,
+    show as plt_show,
+    subplots,
+    title as plt_title,
+    xticks as plt_xticks
 )
 # pylint: disable=import-error
 from tensorflow import (
-    convert_to_tensor, float32 as tf_float32, int64 as tf_int64, py_function,
-    Tensor, uint8 as tf_uint8
+    convert_to_tensor,
+    float32 as tf_float32,
+    int64 as tf_int64,
+    py_function,
+    Tensor,
+    uint8 as tf_uint8
 )
 from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
@@ -415,6 +427,8 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         fontsize=6,
         rotation=90
     )
+    figure_manager = get_current_fig_manager()
+    figure_manager.resize(*figure_manager.window.maxsize())
     plt_savefig(
         fname=path_join(
             PICTURES_DIR,
@@ -437,6 +451,11 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         rwidth=0.8
     )
     plt_title(label=what_it_represent)
+    plt_xticks(
+        ticks=list(range(0, IMAGE_N_COLUMNS, 20)),
+        fontsize=6,
+        rotation=90
+    )
     plt_savefig(
         fname=path_join(
             PICTURES_DIR,
@@ -459,6 +478,11 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         rwidth=0.8
     )
     plt_title(label=what_it_represent)
+    plt_xticks(
+        ticks=list(range(0, IMAGE_N_ROWS, 20)),
+        fontsize=6,
+        rotation=90
+    )
     plt_savefig(
         fname=path_join(
             PICTURES_DIR,
@@ -469,6 +493,8 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     plt_show(block=False)
     plt_pause(interval=1)
     plt_clf()
+
+    plt_close()
 
     print('- ' * 30)
 
