@@ -654,9 +654,9 @@ def turn_bounding_boxes_to_model_outputs(
 
 
 if __name__ == '__main__':
-    all_samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
-
     inspect_bounding_boxes_statistics_on_training_n_validation_set()
+
+    all_samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
 
     show_dataset_as_movie(
         ordered_samples_and_labels=all_samples_and_labels_dataset
