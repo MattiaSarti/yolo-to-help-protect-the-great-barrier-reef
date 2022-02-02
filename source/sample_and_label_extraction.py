@@ -14,9 +14,9 @@ from typing import Dict, List, Tuple
 
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import (
-    clf as plt_clf, hist as plt_hist, pause as plt_pause,
-    savefig as plt_savefig, show as plt_show, subplots, title as plt_title,
-    xticks as plt_xticks
+    clf as plt_clf, figure as plt_figure, hist as plt_hist,
+    pause as plt_pause, savefig as plt_savefig, show as plt_show, subplots,
+    title as plt_title, xticks as plt_xticks
 )
 # pylint: disable=import-error
 from tensorflow import (
@@ -373,6 +373,7 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     )
 
     what_it_represent = "Histogram of Number of Bounding Boxes per Image"
+    plt_figure()
     plt_hist(
         x=n_bounding_boxes_per_image_for_histogram,
         bins=maximum_n_bounding_boxes_per_image,
@@ -391,12 +392,13 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         )
     )
     plt_show(block=False)
-    plt_pause(interval=3)
+    plt_pause(interval=1)
     plt_clf()
 
     what_it_represent = (
         "Histogram of Bounding Boxes' Centers Distance [pixels]"
     )
+    plt_figure()
     plt_hist(
         x=bounding_boxes_centers_distances_for_histogram,
         bins=list(range(int(sqrt(IMAGE_N_COLUMNS**2 + IMAGE_N_ROWS**2)))),
@@ -405,6 +407,13 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         rwidth=0.8
     )
     plt_title(label=what_it_represent)
+    plt_xticks(
+        ticks=list(
+            range(0, int(sqrt(IMAGE_N_COLUMNS**2 + IMAGE_N_ROWS**2)), 20)
+        ),
+        fontsize=6,
+        rotation=90
+    )
     plt_savefig(
         path_join(
             PICTURES_DIR,
@@ -412,12 +421,13 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         )
     )
     plt_show(block=False)
-    plt_pause(interval=3)
+    plt_pause(interval=1)
     plt_clf()
 
     what_it_represent = (
         "Histogram of Bounding Boxes' Centers X-Coordinate Distance [pixels]"
     )
+    plt_figure()
     plt_hist(
         x=bounding_boxes_centers_x_coord_distances_for_histogram,
         bins=list(range(IMAGE_N_COLUMNS)),
@@ -432,8 +442,9 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
             what_it_represent + '.png'
         )
     )
+    plt_figure()
     plt_show(block=False)
-    plt_pause(interval=3)
+    plt_pause(interval=1)
     plt_clf()
 
     what_it_represent = (
@@ -454,11 +465,10 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         )
     )
     plt_show(block=False)
-    plt_pause(interval=3)
+    plt_pause(interval=1)
     plt_clf()
 
     print('- ' * 30)
-    raise NotImplementedError
 
 
 def label_line_to_image_path_2_bounding_boxes_and_2_model_output(
