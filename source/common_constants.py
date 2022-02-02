@@ -1,5 +1,5 @@
 """
-Convenient definition of common constants.
+Convenient definitions of common constants.
 """
 
 
