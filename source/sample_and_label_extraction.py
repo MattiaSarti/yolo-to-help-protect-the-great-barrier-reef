@@ -26,6 +26,7 @@ from matplotlib.pyplot import (
     title as plt_title,
     xticks as plt_xticks
 )
+from numpy import zeros as np_zeros
 # pylint: disable=import-error
 from tensorflow import (
     convert_to_tensor,
@@ -39,7 +40,16 @@ from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
-from common_constants import IMAGE_N_ROWS, IMAGE_N_COLUMNS
+from common_constants import (
+    IMAGE_N_COLUMNS,
+    IMAGE_N_ROWS,
+    N_OUTPUTS_PER_ANCHOR,
+    OUTPUT_GRID_CELL_N_ANCHORS,
+    OUTPUT_GRID_CELL_N_COLUMNS,
+    OUTPUT_GRID_CELL_N_ROWS,
+    OUTPUT_GRID_N_COLUMNS,
+    OUTPUT_GRID_N_ROWS
+)
 
 
 DATASET_DIR = path_join(
@@ -76,6 +86,15 @@ def build_dataset_of_all_samples_and_labels() -> Dataset:
         num_parallel_calls=AUTOTUNE,  # TODO
         deterministic=True
     )
+
+
+def get_cell_containing_bounding_box_center(
+        center_absolute_x_and_y_coords: Tuple[float, float]
+) -> Tuple[int, int, int, int]:
+    """
+    TODO
+    """
+    return (1, 2, 3, 4)
 
 
 def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
@@ -508,9 +527,9 @@ def label_line_to_image_path_2_bounding_boxes_and_2_model_output(
     """
     Turn any line of the CSV labels file from the original format
     'video_id,sequence,video_frame,sequence_frame,image_id,annotations' into
-    two dictionariies: the former with the respective image file path as key and the respective
-    bounding boxes as value, the latter with the respective image file path as key and the respective
-    model outputs as value.
+    two dictionariies: the former with the respective image file path as key
+    and the respective bounding boxes as value, the latter with the respective
+    image file path as key and the respective model outputs as value.
     """
     image_path = path_join(
         DATASET_DIR,
@@ -640,7 +659,66 @@ def turn_bounding_boxes_to_model_outputs(
     equivalent information from the model outputs' perspective, as direct
     supervision labels.
     """
-    return raw_bounding_boxes  # TODO
+    labels = np_zeros(
+        shape=(
+            OUTPUT_GRID_N_ROWS,
+            OUTPUT_GRID_N_COLUMNS,
+            OUTPUT_GRID_CELL_N_ANCHORS,
+            N_OUTPUTS_PER_ANCHOR
+        )
+    )
+
+    for bounding_box in raw_bounding_boxes:
+        (
+            cell_row_index,
+            cell_column_index,
+            cell_x_coord,
+            cell_y_coord
+        ) = get_cell_containing_bounding_box_center(
+            center_absolute_x_and_y_coords=(
+                bounding_box['x'] + (bounding_box['width'] / 2),
+                bounding_box['y'] + (bounding_box['height'] / 2)
+            )
+        )
+
+        relative_x_coord = (
+            (bounding_box['x'] - cell_x_coord) / OUTPUT_GRID_CELL_N_COLUMNS
+        )
+        relative_y_coord = (
+            bounding_box['y'] - cell_y_coord / OUTPUT_GRID_CELL_N_ROWS
+        )
+        relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
+        relative_height = bounding_box['width'] / IMAGE_N_ROWS
+
+        label_associated_to_some_anchor = False
+        for anchor_index in OUTPUT_GRID_CELL_N_ANCHORS:
+            is_this_ancor_already_full = (
+                labels[cell_row_index, cell_column_index, anchor_index, :] ==
+                [.0] * N_OUTPUTS_PER_ANCHOR
+            ).all()
+            if is_this_ancor_already_full:
+                continue
+
+            labels[cell_row_index, cell_column_index, anchor_index, :] = [
+                1.0,  # FIXME: is this supposed to be just on objectiveness score or an IoU?
+                relative_x_coord,
+                relative_y_coord,
+                relative_width,
+                relative_height]
+
+            label_associated_to_some_anchor = True
+            break
+
+        if not label_associated_to_some_anchor:
+            raise Exception(
+                f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
+                "a better output resolution are required, as more bounding " +
+                "boxes than the set number of anchors are falling within " +
+                "the same output cell in this sample."
+            )
+
+    print(labels.shape); raise NotImplementedError
+    return labels  # TODO
 
 
 (
@@ -650,11 +728,11 @@ def turn_bounding_boxes_to_model_outputs(
 
 
 # TODO: .cache().prefetch(buffer_size=AUTOTUNE)
-# TODO: .map() to preprocess sample vs preprocessing layer in the network?
+# TODO: .map() to preprocess samples vs preprocessing layer in the network?
 
 
 if __name__ == '__main__':
-    inspect_bounding_boxes_statistics_on_training_n_validation_set()
+    # inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
     all_samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
 

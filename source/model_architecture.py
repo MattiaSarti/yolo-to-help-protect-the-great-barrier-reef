@@ -15,13 +15,20 @@ from tensorflow.keras.layers import (
 )
 # pylint: enable=import-error
 
-from common_constants import IMAGE_N_ROWS, IMAGE_N_COLUMNS, IMAGE_N_CHANNELS
+from common_constants import (
+    DOWNSAMPLING_STEPS,
+    IMAGE_N_CHANNELS,
+    IMAGE_N_COLUMNS,
+    IMAGE_N_ROWS,
+    N_CONVOLUTIONS_AT_SAME_RESOLUTION,
+    N_OUTPUTS_PER_ANCHOR
+)
 
 
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'kernel_size': (3, 3),
     'strides': (1, 1),
-    'padding': 'valid',
+    'padding': 'same',  # TODO
     'data_format': 'channels_last',
     'dilation_rate': (1, 1),
     'groups': 1,
@@ -29,7 +36,6 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'use_bias': True
 }
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
-N_OF_PREDICTIONS_PER_GRID_ANCHOR = 5
 POOLING_LAYERS_COMMON_KWARGS = {
     'pool_size': (2, 2),
     'strides': (2, 2),
@@ -84,12 +90,12 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 
         # for each iso-resolution block of convolutional processing ended by a
         # downsampling:
-        for _ in range(4):
+        for _ in range(DOWNSAMPLING_STEPS):
             currentn_of_filters *= 2
 
             # for each enriched convolutional layer in the current
             # iso-resolution block:
-            for _ in range(3):
+            for _ in range(N_CONVOLUTIONS_AT_SAME_RESOLUTION):
                 outputs = YOLOv3Variant.conv_plus_norm_plus_activation(
                     n_of_filters=currentn_of_filters
                 )(outputs)
@@ -100,7 +106,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
         outputs = Convolution2D(
-            filters=N_OF_PREDICTIONS_PER_GRID_ANCHOR,
+            filters=N_OUTPUTS_PER_ANCHOR,
             **(
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
             )
