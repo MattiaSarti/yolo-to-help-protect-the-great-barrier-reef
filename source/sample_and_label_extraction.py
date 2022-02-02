@@ -372,8 +372,9 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         "see plot"
     )
 
-    what_it_represent = "Histogram of Number of Bounding Boxes per Image"
     plt_figure()
+
+    what_it_represent = "Histogram of Number of Bounding Boxes per Image"
     plt_hist(
         x=n_bounding_boxes_per_image_for_histogram,
         bins=maximum_n_bounding_boxes_per_image,
@@ -386,10 +387,11 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         ticks=list(range(maximum_n_bounding_boxes_per_image))
     )
     plt_savefig(
-        path_join(
+        fname=path_join(
             PICTURES_DIR,
             what_it_represent + '.png'
-        )
+        ),
+        bbox_inches='tight'
     )
     plt_show(block=False)
     plt_pause(interval=1)
@@ -398,7 +400,6 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     what_it_represent = (
         "Histogram of Bounding Boxes' Centers Distance [pixels]"
     )
-    plt_figure()
     plt_hist(
         x=bounding_boxes_centers_distances_for_histogram,
         bins=list(range(int(sqrt(IMAGE_N_COLUMNS**2 + IMAGE_N_ROWS**2)))),
@@ -415,10 +416,11 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         rotation=90
     )
     plt_savefig(
-        path_join(
+        fname=path_join(
             PICTURES_DIR,
             what_it_represent + '.png'
-        )
+        ),
+        bbox_inches='tight'
     )
     plt_show(block=False)
     plt_pause(interval=1)
@@ -427,7 +429,6 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     what_it_represent = (
         "Histogram of Bounding Boxes' Centers X-Coordinate Distance [pixels]"
     )
-    plt_figure()
     plt_hist(
         x=bounding_boxes_centers_x_coord_distances_for_histogram,
         bins=list(range(IMAGE_N_COLUMNS)),
@@ -437,12 +438,12 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     )
     plt_title(label=what_it_represent)
     plt_savefig(
-        path_join(
+        fname=path_join(
             PICTURES_DIR,
             what_it_represent + '.png'
-        )
+        ),
+        bbox_inches='tight'
     )
-    plt_figure()
     plt_show(block=False)
     plt_pause(interval=1)
     plt_clf()
@@ -459,10 +460,11 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
     )
     plt_title(label=what_it_represent)
     plt_savefig(
-        path_join(
+        fname=path_join(
             PICTURES_DIR,
             what_it_represent + '.png'
-        )
+        ),
+        bbox_inches='tight'
     )
     plt_show(block=False)
     plt_pause(interval=1)
