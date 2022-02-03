@@ -26,7 +26,7 @@ from matplotlib.pyplot import (
     title as plt_title,
     xticks as plt_xticks
 )
-from numpy import zeros as np_zeros
+from numpy import argmin, sum as np_sum, zeros as np_zeros
 # pylint: disable=import-error
 from tensorflow import (
     convert_to_tensor,
@@ -44,6 +44,7 @@ from common_constants import (
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
     N_OUTPUTS_PER_ANCHOR,
+    OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
     OUTPUT_GRID_CELL_N_ANCHORS,
     OUTPUT_GRID_CELL_N_COLUMNS,
     OUTPUT_GRID_CELL_N_ROWS,
@@ -68,7 +69,7 @@ PICTURES_DIR = path_join(
 )
 
 
-def build_dataset_of_all_samples_and_labels() -> Dataset:
+def dataset_of_samples_and_bounding_boxes() -> Dataset:
     """
     Build a TensorFlow dataset that can iterate over all the dataset samples
     and the respective labels containing bounding boxes.
@@ -79,7 +80,27 @@ def build_dataset_of_all_samples_and_labels() -> Dataset:
 
     return image_paths_dataset.map(
         map_func=lambda image_path: py_function(
-            func=load_sample_and_get_label,
+            func=load_sample_and_get_bounding_boxes,
+            inp=[image_path],
+            Tout=(tf_uint8, tf_int64)
+        ),
+        num_parallel_calls=AUTOTUNE,  # TODO
+        deterministic=True
+    )
+
+
+def dataset_of_samples_and_model_outputs() -> Dataset:
+    """
+    Build a TensorFlow dataset that can iterate over all the dataset samples
+    and the respective labels containing bounding boxes.
+    """
+    image_paths_dataset = Dataset.from_tensor_slices(
+        tensors=[*IMAGE_PATHS_TO_MODEL_OUTPUTS]  # only keys included
+    )
+
+    return image_paths_dataset.map(
+        map_func=lambda image_path: py_function(
+            func=load_sample_and_get_model_outputs,
             inp=[image_path],
             Tout=(tf_uint8, tf_int64)
         ),
@@ -92,8 +113,23 @@ def get_cell_containing_bounding_box_center(
         center_absolute_x_and_y_coords: Tuple[float, float]
 ) -> Tuple[int, int, int, int]:
     """
-    TODO
+    Find the output grid cell whose center is closest to the bounding box one
+    (the input one), returning the grid cell's row and column indexes and its
+    x and y coordinates.
     """
+    grid_cell_enclosing_bounding_box_center_index = argmin(
+        # squared element-wise center pairs' distances representing the
+        # minimized objective to find the closest grid cell center:
+        a=np_sum(
+            a=(
+                (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
+                 center_absolute_x_and_y_coords) ** 2
+            ),
+            axis=1
+        )
+    )
+    raise NotImplementedError
+
     return (1, 2, 3, 4)
 
 
@@ -594,7 +630,9 @@ def load_labels_as_paths_to_bounding_boxes_and_model_outputs_dicts() -> Tuple[
     return (image_paths_to_bounding_boxes, image_paths_to_model_outputs)
 
 
-def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
+def load_sample_and_get_bounding_boxes(image_path: Tensor) -> Tuple[
+        Tensor, Tensor
+]:
     """
     Load the sample and get the label - representing bounding boxes - of the
     image represented by the input path.
@@ -616,6 +654,27 @@ def load_sample_and_get_label(image_path: Tensor) -> Tuple[Tensor, Tensor]:
                 ] for bounding_box_dict in
                 IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]
             ],
+            dtype=tf_int64
+        )
+    )
+
+
+def load_sample_and_get_model_outputs(image_path: Tensor) -> Tuple[
+        Tensor, Tensor
+]:
+    """
+    Load the sample and get the label - representing model outputs - of the
+    image represented by the input path.
+    """
+    return (
+        decode_jpeg(
+            contents=read_file(
+                filename=image_path
+            )
+        ),
+        convert_to_tensor(
+            # bounding boxes as network output values:
+            value=IMAGE_PATHS_TO_MODEL_OUTPUTS[image_path.numpy()],
             dtype=tf_int64
         )
     )
@@ -659,6 +718,7 @@ def turn_bounding_boxes_to_model_outputs(
     equivalent information from the model outputs' perspective, as direct
     supervision labels.
     """
+    # print('\n\n\n'); print(raw_bounding_boxes)
     labels = np_zeros(
         shape=(
             OUTPUT_GRID_N_ROWS,
@@ -691,11 +751,15 @@ def turn_bounding_boxes_to_model_outputs(
         relative_height = bounding_box['width'] / IMAGE_N_ROWS
 
         label_associated_to_some_anchor = False
-        for anchor_index in OUTPUT_GRID_CELL_N_ANCHORS:
+        for anchor_index in range(OUTPUT_GRID_CELL_N_ANCHORS):
             is_this_ancor_already_full = (
-                labels[cell_row_index, cell_column_index, anchor_index, :] ==
+                labels[cell_row_index, cell_column_index, anchor_index, :] !=
                 [.0] * N_OUTPUTS_PER_ANCHOR
-            ).all()
+            ).any()
+            # print(
+            #     labels[cell_row_index, cell_column_index, anchor_index, :] !=
+            #     [.0] * N_OUTPUTS_PER_ANCHOR
+            # )
             if is_this_ancor_already_full:
                 continue
 
@@ -710,6 +774,7 @@ def turn_bounding_boxes_to_model_outputs(
             break
 
         if not label_associated_to_some_anchor:
+            continue  # TODO: remove this line
             raise Exception(
                 f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
                 "a better output resolution are required, as more bounding " +
@@ -717,8 +782,7 @@ def turn_bounding_boxes_to_model_outputs(
                 "the same output cell in this sample."
             )
 
-    print(labels.shape); raise NotImplementedError
-    return labels  # TODO
+    return labels
 
 
 (
@@ -734,8 +798,13 @@ def turn_bounding_boxes_to_model_outputs(
 if __name__ == '__main__':
     # inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
-    all_samples_and_labels_dataset = build_dataset_of_all_samples_and_labels()
+    samples_n_bounding_boxes_dataset = dataset_of_samples_and_bounding_boxes()
 
-    show_dataset_as_movie(
-        ordered_samples_and_labels=all_samples_and_labels_dataset
-    )
+    # show_dataset_as_movie(
+    #     ordered_samples_and_labels=samples_n_bounding_boxes_dataset
+    # )
+
+    samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs()
+
+    for sample_and_model_output in samples_n_model_outputs_dataset:
+        print(sample_and_model_output); raise NotImplementedError
