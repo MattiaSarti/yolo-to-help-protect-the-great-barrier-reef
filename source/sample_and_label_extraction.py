@@ -41,10 +41,11 @@ from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
 from common_constants import (
+    FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
+    FLATTENED_OUTPUT_GRID_CELL_CENTERS_RC_INDEXES
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
     N_OUTPUTS_PER_ANCHOR,
-    OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
     OUTPUT_GRID_CELL_N_ANCHORS,
     OUTPUT_GRID_CELL_N_COLUMNS,
     OUTPUT_GRID_CELL_N_ROWS,
@@ -122,15 +123,21 @@ def get_cell_containing_bounding_box_center(
         # minimized objective to find the closest grid cell center:
         a=np_sum(
             a=(
-                (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
+                (FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
                  center_absolute_x_and_y_coords) ** 2
             ),
             axis=1
         )
     )
-    raise NotImplementedError
 
-    return (1, 2, 3, 4)
+    return (
+        FLATTENED_OUTPUT_GRID_CELL_CENTERS_RC_INDEXES[
+            grid_cell_enclosing_bounding_box_center_index
+        ].tolist() +
+        FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
+            grid_cell_enclosing_bounding_box_center_index
+        ].tolist()
+    )
 
 
 def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
