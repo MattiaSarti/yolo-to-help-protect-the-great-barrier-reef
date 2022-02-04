@@ -22,7 +22,9 @@ from common_constants import (
     IMAGE_N_ROWS,
     N_CONVOLUTIONS_AT_SAME_RESOLUTION,
     N_OUTPUTS_PER_ANCHOR,
-    OUTPUT_GRID_CELL_N_ANCHORS
+    OUTPUT_GRID_CELL_N_ANCHORS,
+    OUTPUT_GRID_N_COLUMNS,
+    OUTPUT_GRID_N_ROWS
 )
 
 
@@ -113,6 +115,18 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         )(outputs)
 
         # TODO: outputs = Lambda()(outputs)
+
+        # TODO: outputs = Lambda()(outputs)
+
+        # asserting the correctness of the outputs' shape:
+        assert (
+            outputs.shape[1:] == (
+                OUTPUT_GRID_N_ROWS,
+                OUTPUT_GRID_N_COLUMNS,
+                OUTPUT_GRID_CELL_N_ANCHORS,
+                N_OUTPUTS_PER_ANCHOR
+            )
+        ), "Unmatched expectations between outputs and labels shape."
 
         return Model(
             inputs=inputs,
