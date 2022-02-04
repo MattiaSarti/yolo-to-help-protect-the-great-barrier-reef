@@ -26,7 +26,7 @@ from matplotlib.pyplot import (
     title as plt_title,
     xticks as plt_xticks
 )
-from numpy import argmin, sum as np_sum, zeros as np_zeros
+from numpy import argmin, sum as np_sum, unravel_index, zeros
 # pylint: disable=import-error
 from tensorflow import (
     convert_to_tensor,
@@ -41,11 +41,11 @@ from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
 from common_constants import (
-    FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
-    FLATTENED_OUTPUT_GRID_CELL_CENTERS_RC_INDEXES
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
     N_OUTPUTS_PER_ANCHOR,
+    OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
+    OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
     OUTPUT_GRID_CELL_N_ANCHORS,
     OUTPUT_GRID_CELL_N_COLUMNS,
     OUTPUT_GRID_CELL_N_ROWS,
@@ -112,30 +112,55 @@ def dataset_of_samples_and_model_outputs() -> Dataset:
 
 def get_cell_containing_bounding_box_center(
         center_absolute_x_and_y_coords: Tuple[float, float]
-) -> Tuple[int, int, int, int]:
+) -> List[int, int, int, int]:
     """
     Find the output grid cell whose center is closest to the bounding box one
     (the input one), returning the grid cell's row and column indexes and its
     x and y coordinates.
+    ---
+        Output Shape:
+            - (4,)
+    ---
+        Output Meaning:
+            - [
+                grid cell row index,
+                grid cell column index,
+                x coordindate of cell center,
+                y coordindate of cell center
+            ]
     """
-    grid_cell_enclosing_bounding_box_center_index = argmin(
-        # squared element-wise center pairs' distances representing the
-        # minimized objective to find the closest grid cell center:
-        a=np_sum(
-            a=(
-                (FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
-                 center_absolute_x_and_y_coords) ** 2
-            ),
-            axis=1
-        )
+    (
+        grid_cell_enclosing_bounding_box_center_row_index,
+        grid_cell_enclosing_bounding_box_center_column_index
+    ) = unravel_index(
+        indices=argmin(  # NOTE: in case of equivalent minima, the first one is picked
+            # grid of squared element-wise center pairs' distances representing
+            # the minimized objective to find the closest grid cell center:
+            a=np_sum(
+                a=(
+                    (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
+                    center_absolute_x_and_y_coords) ** 2
+                ),
+                axis=-1
+            )
+        ),
+        shape=(OUTPUT_GRID_N_ROWS, OUTPUT_GRID_N_COLUMNS),
+        order='C'
     )
+    raise NotImplementedError
 
     return (
-        FLATTENED_OUTPUT_GRID_CELL_CENTERS_RC_INDEXES[
-            grid_cell_enclosing_bounding_box_center_index
+        # [grid cell row index, grid cell column index]:
+        OUTPUT_GRID_CELL_CORNERS_XY_COORDS[
+            grid_cell_enclosing_bounding_box_center_row_index,
+            grid_cell_enclosing_bounding_box_center_column_index,
+            :
         ].tolist() +
-        FLATTENED_OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
-            grid_cell_enclosing_bounding_box_center_index
+        # [x coordindate of cell center, y coordindate of cell center]:
+        OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
+            grid_cell_enclosing_bounding_box_center_row_index,
+            grid_cell_enclosing_bounding_box_center_column_index,
+            :
         ].tolist()
     )
 
@@ -725,8 +750,7 @@ def turn_bounding_boxes_to_model_outputs(
     equivalent information from the model outputs' perspective, as direct
     supervision labels.
     """
-    # print('\n\n\n'); print(raw_bounding_boxes)
-    labels = np_zeros(
+    labels = zeros(
         shape=(
             OUTPUT_GRID_N_ROWS,
             OUTPUT_GRID_N_COLUMNS,
@@ -763,10 +787,6 @@ def turn_bounding_boxes_to_model_outputs(
                 labels[cell_row_index, cell_column_index, anchor_index, :] !=
                 [.0] * N_OUTPUTS_PER_ANCHOR
             ).any()
-            # print(
-            #     labels[cell_row_index, cell_column_index, anchor_index, :] !=
-            #     [.0] * N_OUTPUTS_PER_ANCHOR
-            # )
             if is_this_ancor_already_full:
                 continue
 
@@ -781,7 +801,6 @@ def turn_bounding_boxes_to_model_outputs(
             break
 
         if not label_associated_to_some_anchor:
-            continue  # TODO: remove this line
             raise Exception(
                 f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
                 "a better output resolution are required, as more bounding " +
