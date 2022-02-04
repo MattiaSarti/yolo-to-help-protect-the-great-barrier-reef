@@ -6,12 +6,13 @@ Model architecture definition.
 # pylint: disable=import-error
 from tensorflow import Tensor
 from tensorflow.keras import Input, Model, Sequential
+from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.layers import (
     BatchNormalization,
     Convolution2D,
-    Lambda,
     LeakyReLU,
-    MaxPooling2D
+    MaxPooling2D,
+    Reshape
 )
 # pylint: enable=import-error
 
@@ -113,10 +114,21 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
             )
         )(outputs)
+        # NOTE: now bounding boxes' attributes respect the order of meaning
+        # (object centered probability, x, y, width, height)
 
-        # TODO: outputs = Lambda()(outputs)
+        # reshaping the last output dimension to split anchors and their
+        # features along two separate dimensions:
+        # TODO: outputs = Reshape()(outputs)
 
-        # TODO: outputs = Lambda()(outputs)
+        # applying an element-wise sigmoidal activation function as all 5
+        # bounding boxes' output attributes must belong to [0;1] range,
+        # since they are either probabilities of a single class (the first
+        # attribute) or relative coordinates (the second and third one) or
+        # relative sizes (the fourth and fifth one):
+        outputs = sigmoid(outputs)
+        # FIXME: can these sigmoidal computations be carried out together with
+        # the loss to achieve better gradients during training?
 
         # asserting the correctness of the outputs' shape:
         assert (
@@ -135,7 +147,6 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 
     def __init__(self) -> None:
         super(YOLOv3Variant, self).__init__()
-
         self.yolov3_fcn = self.build_fully_convolutional_yolov3_architecture()
 
     def call(self, inputs: Tensor, training: bool = False) -> Tensor:  # noqa: E501 pylint: disable=arguments-differ

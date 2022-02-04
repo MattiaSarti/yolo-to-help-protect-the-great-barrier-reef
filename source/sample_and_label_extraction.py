@@ -840,6 +840,7 @@ def turn_bounding_boxes_to_model_outputs(
         relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
         relative_height = bounding_box['width'] / IMAGE_N_ROWS
 
+        # FIXME: introduce anchors' similarity to choose which anchor
         label_associated_to_some_anchor = False
         for anchor_index in range(OUTPUT_GRID_CELL_N_ANCHORS):
             is_this_ancor_already_full = (
