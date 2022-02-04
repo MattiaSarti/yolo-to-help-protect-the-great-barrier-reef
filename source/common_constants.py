@@ -85,9 +85,12 @@ IMAGE_N_ROWS = 720
 N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
 N_OUTPUTS_PER_ANCHOR = 5
 
-OUTPUT_GRID_CELL_N_ANCHORS = 3
-OUTPUT_GRID_CELL_N_COLUMNS = 16  # NOTE: this may vary with the architecture
-OUTPUT_GRID_CELL_N_ROWS = 16  # NOTE: this may vary with the architecture
+OUTPUT_GRID_CELL_N_ANCHORS = 1  # 3
+OUTPUT_GRID_CELL_N_COLUMNS = 8  # 16  # NOTE: this may vary with the architecture
+OUTPUT_GRID_CELL_N_ROWS = 8  # 16  # NOTE: this may vary with the architecture
+# NOTE: common divisors of 1280 and 720: {1, 2, 4, 5, 8, 10, 16, 20, 40, 80},
+# and the ones that respect the training-plus-validation set vounding boxes'
+# distinction when using a single anchor are: {1, 2, 4, 5, 8, 10, 16}
 
 OUTPUT_GRID_N_COLUMNS = int(IMAGE_N_COLUMNS / OUTPUT_GRID_CELL_N_COLUMNS)
 OUTPUT_GRID_N_ROWS = int(IMAGE_N_ROWS / OUTPUT_GRID_CELL_N_ROWS)
