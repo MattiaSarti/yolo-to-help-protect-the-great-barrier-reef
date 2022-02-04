@@ -791,7 +791,7 @@ def turn_bounding_boxes_to_model_outputs(
                 continue
 
             labels[cell_row_index, cell_column_index, anchor_index, :] = [
-                1.0,  # FIXME: is this supposed to be just on objectiveness score or an IoU?
+                1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
                 relative_x_coord,
                 relative_y_coord,
                 relative_width,
