@@ -69,6 +69,9 @@ PICTURES_DIR = path_join(
     'pictures'
 )
 
+SHOW_BOUNDING_BOXES_STATISTICS = False
+SHOW_DATASET_MOVIES = False
+
 
 def dataset_of_samples_and_bounding_boxes() -> Dataset:
     """
@@ -112,7 +115,7 @@ def dataset_of_samples_and_model_outputs() -> Dataset:
 
 def get_cell_containing_bounding_box_center(
         center_absolute_x_and_y_coords: Tuple[float, float]
-) -> List[int, int, int, int]:
+) -> Tuple[int, int, int, int]:
     """
     Find the output grid cell whose center is closest to the bounding box one
     (the input one), returning the grid cell's row and column indexes and its
@@ -147,15 +150,13 @@ def get_cell_containing_bounding_box_center(
         shape=(OUTPUT_GRID_N_ROWS, OUTPUT_GRID_N_COLUMNS),
         order='C'
     )
-    raise NotImplementedError
 
     return (
         # [grid cell row index, grid cell column index]:
-        OUTPUT_GRID_CELL_CORNERS_XY_COORDS[
+        [
             grid_cell_enclosing_bounding_box_center_row_index,
-            grid_cell_enclosing_bounding_box_center_column_index,
-            :
-        ].tolist() +
+            grid_cell_enclosing_bounding_box_center_column_index
+        ] +
         # [x coordindate of cell center, y coordindate of cell center]:
         OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
             grid_cell_enclosing_bounding_box_center_row_index,
@@ -712,32 +713,90 @@ def load_sample_and_get_model_outputs(image_path: Tensor) -> Tuple[
     )
 
 
-def show_dataset_as_movie(ordered_samples_and_labels: Dataset) -> None:
+def show_dataset_as_movie(
+        ordered_samples_and_labels: Dataset,
+        bounding_boxes_or_model_outputs: str = 'bounding_boxes'
+) -> None:
     """
     Show the dataset images frame by frame, reconstructing the video
     sequences, with boundinx boxes contained displayed over the respective
     sample/frame.
     """
+    assert (
+        bounding_boxes_or_model_outputs in ('bounding_boxes', 'model_outputs')
+    ), "Invalid 'bounding_boxes_or_model_outputs' input."
+
     _, axes = subplots(1, 1)
+
+    # for each sample-label pair, a frame fusing them together is shown:
     for index, sample_and_label in enumerate(ordered_samples_and_labels):
         if index % 1000 == 0:
             print(f"{index} frames shown")
 
+        # clearing axes from the previous frame information:
         axes.clear()
 
+        # showing the image:
         axes.imshow(sample_and_label[0].numpy())
-        for bounding_box in sample_and_label[1].numpy().tolist():
-            axes.add_patch(
-                p=Rectangle(
-                    xy=(bounding_box[0], bounding_box[1]),
-                    width=bounding_box[2],
-                    height=bounding_box[3],
-                    linewidth=2,
-                    edgecolor='#00ff00',
-                    facecolor='none'
-                )
-            )
 
+        # showing labels...
+
+        # ... either as bounding boxes:
+        if bounding_boxes_or_model_outputs == 'bounding_boxes':
+            # for each bounding box:
+            for bounding_box in sample_and_label[1].numpy().tolist():
+                # drawing the bounding box over the frame image:
+                axes.add_patch(
+                    p=Rectangle(
+                        xy=(bounding_box[0], bounding_box[1]),
+                        width=bounding_box[2],
+                        height=bounding_box[3],
+                        linewidth=2,
+                        edgecolor='#00ff00',
+                        facecolor='none'
+                    )
+                )
+
+        # ... or as model output grid cells:
+        elif bounding_boxes_or_model_outputs == 'model_outputs':
+            # for each model output grid cell whose label contains anchors:
+            for cell_row_index in range(OUTPUT_GRID_N_ROWS):
+                for cell_column_index in range(OUTPUT_GRID_N_COLUMNS):
+                    # filtering out grid cells not containing any anchor:
+                    if (
+                        sample_and_label[1][
+                            cell_row_index,
+                            cell_column_index,
+                            :,
+                            :
+                        ].numpy() == zeros(
+                            shape=(OUTPUT_GRID_CELL_N_ANCHORS, N_OUTPUTS_PER_ANCHOR)
+                        )
+                    ).all():
+                        continue
+
+                    # highlighting the full cell over the frame image:
+                    axes.add_patch(
+                        p=Rectangle(
+                            xy=(
+                                OUTPUT_GRID_CELL_CORNERS_XY_COORDS[
+                                    cell_row_index,
+                                    cell_column_index
+                                ]
+                            ),
+                            width=OUTPUT_GRID_CELL_N_COLUMNS,
+                            height=OUTPUT_GRID_CELL_N_ROWS,
+                            linewidth=2,
+                            edgecolor='#00ff00',
+                            facecolor='none'
+                        )
+                    )
+
+        else:
+            raise Exception("Ill-conceived code.")
+
+        # making the plot go adeah with the next frame after a small pause for
+        # better observation:
         plt_show(block=False)
         plt_pause(interval=0.000001)
 
@@ -822,15 +881,21 @@ def turn_bounding_boxes_to_model_outputs(
 
 
 if __name__ == '__main__':
-    # inspect_bounding_boxes_statistics_on_training_n_validation_set()
+    if SHOW_BOUNDING_BOXES_STATISTICS:
+        inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
     samples_n_bounding_boxes_dataset = dataset_of_samples_and_bounding_boxes()
 
-    # show_dataset_as_movie(
-    #     ordered_samples_and_labels=samples_n_bounding_boxes_dataset
-    # )
+    if SHOW_DATASET_MOVIES:
+        show_dataset_as_movie(
+            ordered_samples_and_labels=samples_n_bounding_boxes_dataset,
+            bounding_boxes_or_model_outputs='bounding_boxes'
+        )
 
     samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs()
 
-    for sample_and_model_output in samples_n_model_outputs_dataset:
-        print(sample_and_model_output); raise NotImplementedError
+    if SHOW_DATASET_MOVIES:
+        show_dataset_as_movie(
+            ordered_samples_and_labels=samples_n_model_outputs_dataset,
+            bounding_boxes_or_model_outputs='model_outputs'
+        )
