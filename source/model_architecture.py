@@ -21,7 +21,8 @@ from common_constants import (
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
     N_CONVOLUTIONS_AT_SAME_RESOLUTION,
-    N_OUTPUTS_PER_ANCHOR
+    N_OUTPUTS_PER_ANCHOR,
+    OUTPUT_GRID_CELL_N_ANCHORS
 )
 
 
@@ -85,19 +86,18 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             shape=(IMAGE_N_ROWS, IMAGE_N_COLUMNS, IMAGE_N_CHANNELS)
         )
 
-        currentn_of_filters = 32
         outputs = inputs
 
         # for each iso-resolution block of convolutional processing ended by a
         # downsampling:
+        current_n_of_filters = 32
         for _ in range(DOWNSAMPLING_STEPS):
-            currentn_of_filters *= 2
-
+            current_n_of_filters *= 2
             # for each enriched convolutional layer in the current
             # iso-resolution block:
             for _ in range(N_CONVOLUTIONS_AT_SAME_RESOLUTION):
                 outputs = YOLOv3Variant.conv_plus_norm_plus_activation(
-                    n_of_filters=currentn_of_filters
+                    n_of_filters=current_n_of_filters
                 )(outputs)
 
             # downsampling, ending the iso-resolution block:
@@ -106,7 +106,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
         outputs = Convolution2D(
-            filters=N_OUTPUTS_PER_ANCHOR,
+            filters=(N_OUTPUTS_PER_ANCHOR * OUTPUT_GRID_CELL_N_ANCHORS),
             **(
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
             )
@@ -152,5 +152,5 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 if __name__ == '__main__':
     model = YOLOv3Variant()
 
-    model.summary()
+    model.yolov3_fcn.summary()
     # TODO: model.plot_model(...)
