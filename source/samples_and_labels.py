@@ -11,6 +11,7 @@ from math import sqrt
 from os import getcwd, pardir
 from os.path import join as path_join
 from typing import Dict, List, Tuple
+from cv2 import determinant
 
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import (
@@ -54,6 +55,7 @@ from common_constants import (
 
 
 MINI_BATCH_SIZE = 1024  # TODO
+VALIDATION_SET_PORTION_OF_DATA = 0.3
 
 DATASET_DIR = path_join(
     getcwd(),
@@ -94,14 +96,24 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
     )
 
 
-def dataset_of_samples_and_model_outputs() -> Dataset:
+def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
     """
     Build a TensorFlow dataset that can iterate over all the dataset samples
-    and the respective labels containing bounding boxes.
+    and the respective labels containing model outputs, in a shuffled order.
     """
     image_paths_dataset = Dataset.from_tensor_slices(
         tensors=[*IMAGE_PATHS_TO_MODEL_OUTPUTS]  # only keys included
     )
+
+    # NOTE: shuffling is carried out here to have acceptable performance with
+    # a shuffling buffer size that allows to take the whole set into memory
+    # in case shuffling is desired:
+    if shuffle:
+        image_paths_dataset.shuffle(
+            buffer_size=N_TRAINING_PLUS_VALIDATION_SAMPLES,
+            seed=0,
+            reshuffle_each_iteration=False  # NOTE: relevant when splitting
+        )
 
     return image_paths_dataset.map(
         map_func=lambda image_path: py_function(
@@ -714,6 +726,52 @@ def load_sample_and_get_model_outputs(image_path: Tensor) -> Tuple[
     )
 
 
+def split_dataset_into_batched_training_and_validation_sets(
+        training_plus_validation_set: Dataset
+) -> Tuple[Dataset, Dataset]:
+    """
+    Split the input dataset into a training set and a validation set, both
+    already divided into mini-batches.
+    """
+    n_samples_in_validation_set = int(
+        VALIDATION_SET_PORTION_OF_DATA * N_TRAINING_PLUS_VALIDATION_SAMPLES
+    )
+    n_samples_in_training_set = (
+        N_TRAINING_PLUS_VALIDATION_SAMPLES - n_samples_in_validation_set
+    )
+    assert (
+        n_samples_in_validation_set == n_samples_in_training_set
+    ), "Ill-conceived code."
+
+    training_set = (
+        training_plus_validation_set
+        # selecting only the training samples and labels:
+        .take(count=n_samples_in_training_set)
+        # creating mini-batches:
+        .batch(
+            batch_size=MINI_BATCH_SIZE,
+            drop_remainder=False,
+            num_parallel_calls=AUTOTUNE,  # TODO
+            deterministic=True
+        )
+    )
+    validation_set = (
+        training_plus_validation_set
+        # selecting only the validation samples and labels:
+        .skip(count=n_samples_in_training_set)
+        .take(count=n_samples_in_validation_set)
+        # creating mini-batches:
+        .batch(
+            batch_size=MINI_BATCH_SIZE,
+            drop_remainder=False,
+            num_parallel_calls=AUTOTUNE,  # TODO
+            deterministic=True
+        )
+    )
+
+    return (training_set, validation_set)
+
+
 def show_dataset_as_movie(
         ordered_samples_and_labels: Dataset,
         bounding_boxes_or_model_outputs: str = 'bounding_boxes'
@@ -877,10 +935,12 @@ def turn_bounding_boxes_to_model_outputs(
     IMAGE_PATHS_TO_MODEL_OUTPUTS
 ) = load_labels_as_paths_to_bounding_boxes_and_model_outputs_dicts()
 
+N_TRAINING_PLUS_VALIDATION_SAMPLES = len(IMAGE_PATHS_TO_BOUNDING_BOXES)
+
 
 # TODO: .cache().prefetch(buffer_size=AUTOTUNE)
 # TODO: .map() to preprocess samples vs preprocessing layer in the network?
-# TODO: .batch() to preprocess samples vs preprocessing layer in the network?
+# TODO: fix determinism for reproducibility
 
 
 if __name__ == '__main__':
@@ -895,10 +955,19 @@ if __name__ == '__main__':
             bounding_boxes_or_model_outputs='bounding_boxes'
         )
 
-    samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs()
+    samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs(
+        # not shuffling when needing adjacent frames for showing the movie:
+        shuffle=(not SHOW_DATASET_MOVIES)
+    )
 
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
             ordered_samples_and_labels=samples_n_model_outputs_dataset,
             bounding_boxes_or_model_outputs='model_outputs'
         )
+
+    (
+        training_set, validation_set
+    ) = split_dataset_into_batched_training_and_validation_sets(
+        training_plus_validation_set=samples_n_model_outputs_dataset
+    )
