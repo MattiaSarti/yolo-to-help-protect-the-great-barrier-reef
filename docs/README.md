@@ -14,5 +14,5 @@ Looking at the root directory of the repository:
     - the folder ***/kaggle*** contains [the command used to download the dataset](...), [the command used to create the submitted notebook assembling all the different source files](...) and [the final submitted notebook](...)
     - the folder ***/source*** contains all and only the source code compressed in the above-mentioned final submitted notebook, but split into different files for the sake of maintainability
     - the folder ***/docs/pictures*** is just a folder that contains small memories that give a taste of the competition, since the dataset can not be publicly shared
-    - the file ***/docs/TODO.md*** is a collection of TODOs annotated and checked by myself suring the competition solution development to note down and remember key thoughts of mine
+    - the file ***/docs/TODO.md*** is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
     - the file ***/docs/README.md*** is what you are reading now
