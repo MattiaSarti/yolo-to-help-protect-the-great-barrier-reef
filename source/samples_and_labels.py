@@ -67,6 +67,22 @@ else:
         'input',
         'tensorflow-great-barrier-reef'
     )
+CACHE_DIR = path_join(
+    getcwd(),
+    'cache'
+)
+CACHE_FILE_PATH_FOR_STATISTICS_SET = path_join(
+    CACHE_DIR,
+    'statistics.tmp'
+)
+CACHE_FILE_PATH_FOR_TRAINING_SET = path_join(
+    CACHE_DIR,
+    'training.tmp'
+)
+CACHE_FILE_PATH_FOR_VALIDATION_SET = path_join(
+    CACHE_DIR,
+    'validation.tmp'
+)
 LABELS_FILE_PATH = path_join(
     DATASET_DIR,
     'train.csv'
@@ -91,14 +107,21 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
         tensors=[*IMAGE_PATHS_TO_BOUNDING_BOXES]  # only keys included
     )
 
-    return image_paths_dataset.map(
-        map_func=lambda image_path: py_function(
-            func=load_sample_and_get_bounding_boxes,
-            inp=[image_path],
-            Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
-        ),
-        num_parallel_calls=AUTOTUNE,  # TODO
-        deterministic=True
+    return (
+        image_paths_dataset
+        .map(
+            map_func=lambda image_path: py_function(
+                func=load_sample_and_get_bounding_boxes,
+                inp=[image_path],
+                Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
+            ),
+            num_parallel_calls=AUTOTUNE,
+            deterministic=True
+        )
+        # optimizing performances by caching end-results:
+        .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)
+        # optimizing performances by pre-fetching final elements:
+        .prefetch(buffer_size=AUTOTUNE)
     )
 
 
@@ -121,13 +144,17 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
             reshuffle_each_iteration=False  # NOTE: relevant when splitting
         )
 
+    # NOTE: further optimizations on this dataset - that is the one employed
+    # for training/validation - are carried out later, after
+    # training/validation splitting and batching, to optimize performances
+
     return image_paths_dataset.map(
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_model_outputs,
             inp=[image_path],
             Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
         ),
-        num_parallel_calls=AUTOTUNE,  # TODO
+        num_parallel_calls=AUTOTUNE,
         deterministic=True
     )
 
@@ -754,9 +781,13 @@ def split_dataset_into_batched_training_and_validation_sets(
         .batch(
             batch_size=MINI_BATCH_SIZE,
             drop_remainder=False,
-            num_parallel_calls=AUTOTUNE,  # TODO
+            num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
+        # optimizing performances by caching end-results:
+        .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
+        # optimizing performances by pre-fetching final elements:
+        .prefetch(buffer_size=AUTOTUNE)
     )
     validation_set = (
         training_plus_validation_set
@@ -767,9 +798,13 @@ def split_dataset_into_batched_training_and_validation_sets(
         .batch(
             batch_size=MINI_BATCH_SIZE,
             drop_remainder=False,
-            num_parallel_calls=AUTOTUNE,  # TODO
+            num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
+        # optimizing performances by caching end-results:
+        .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
+        # optimizing performances by pre-fetching final elements:
+        .prefetch(buffer_size=AUTOTUNE)
     )
 
     return (training_set, validation_set)
@@ -939,10 +974,6 @@ def turn_bounding_boxes_to_model_outputs(
 ) = load_labels_as_paths_to_bounding_boxes_and_model_outputs_dicts()
 
 N_TRAINING_PLUS_VALIDATION_SAMPLES = len(IMAGE_PATHS_TO_BOUNDING_BOXES)
-
-
-# TODO: .cache().prefetch(buffer_size=AUTOTUNE)
-# TODO: fix determinism for reproducibility
 
 
 if __name__ == '__main__':

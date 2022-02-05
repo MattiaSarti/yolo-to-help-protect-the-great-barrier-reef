@@ -17,6 +17,7 @@
 - [ ] cross validation
 - [ ] checkpoint averaging
 - [ ] post processing to turn model outputs into predictions of boundinx boxes
+- [ ] fix determinism for reproducibility
 - [ ] run many experiments
 
 

@@ -1,6 +1,9 @@
 # Python's cache:
 __pycache__/
 
+# training and validation sets' cache:
+/source/cache/
+
 # competition examples and dataset folder:
 /tensorflow-great-barrier-reef/
 
