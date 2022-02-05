@@ -38,6 +38,7 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'activation': None,
     'use_bias': True
 }
+FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 64
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
 N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
 POOLING_LAYERS_COMMON_KWARGS = {
@@ -89,12 +90,11 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         )
 
         outputs = inputs
+        current_n_of_filters = FIRST_LAYER_N_CONVOLUTIONAL_FILTERS
 
         # for each iso-resolution block of convolutional processing ended by a
         # downsampling:
-        current_n_of_filters = 32
         for _ in range(DOWNSAMPLING_STEPS):
-            current_n_of_filters *= 2
             # for each enriched convolutional layer in the current
             # iso-resolution block:
             for _ in range(N_CONVOLUTIONS_AT_SAME_RESOLUTION):
@@ -104,6 +104,10 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 
             # downsampling, ending the iso-resolution block:
             outputs = MaxPooling2D(**POOLING_LAYERS_COMMON_KWARGS)(outputs)
+
+            # updating the number of filters for the next iso-resolution
+            # convolutional layers (by doubling them):
+            current_n_of_filters *= 2
 
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
