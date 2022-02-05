@@ -5,7 +5,7 @@ __pycache__/
 /tensorflow-great-barrier-reef/
 
 # credentials for my Kaggle account:
-/kaggle.json
+/kaggle/kaggle.json
 
 # dataset paper:
 /The CSIRO Crown-of-Thorn Starfish Detection Dataset.pdf

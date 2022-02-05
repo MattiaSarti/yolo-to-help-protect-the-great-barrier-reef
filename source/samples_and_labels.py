@@ -65,6 +65,7 @@ LABELS_FILE_PATH = path_join(
 PICTURES_DIR = path_join(
     getcwd(),
     pardir,
+    'docs',
     'pictures'
 )
 
