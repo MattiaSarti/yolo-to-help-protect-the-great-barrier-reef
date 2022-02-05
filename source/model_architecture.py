@@ -21,7 +21,6 @@ from common_constants import (
     IMAGE_N_CHANNELS,
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
-    N_CONVOLUTIONS_AT_SAME_RESOLUTION,
     N_OUTPUTS_PER_ANCHOR,
     OUTPUT_GRID_CELL_N_ANCHORS,
     OUTPUT_GRID_N_COLUMNS,
@@ -40,12 +39,12 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'use_bias': True
 }
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
+N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
 POOLING_LAYERS_COMMON_KWARGS = {
     'pool_size': (2, 2),
     'strides': (2, 2),
     'padding': 'valid',
     'data_format': 'channels_last',
-
 }
 
 
@@ -117,9 +116,25 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # NOTE: now bounding boxes' attributes respect the order of meaning
         # (object centered probability, x, y, width, height)
 
+        # asserting the correctness of the outputs' shape:
+        assert (
+            outputs.shape[1:] == (
+                OUTPUT_GRID_N_ROWS,
+                OUTPUT_GRID_N_COLUMNS,
+                OUTPUT_GRID_CELL_N_ANCHORS * N_OUTPUTS_PER_ANCHOR
+            )
+        ), "Unmatched expectations between outputs and labels shape."
+
         # reshaping the last output dimension to split anchors and their
         # features along two separate dimensions:
-        # TODO: outputs = Reshape()(outputs)
+        outputs = Reshape(
+            target_shape=(
+                OUTPUT_GRID_N_ROWS,
+                OUTPUT_GRID_N_COLUMNS,
+                OUTPUT_GRID_CELL_N_ANCHORS,
+                N_OUTPUTS_PER_ANCHOR
+            )
+        )(outputs)
 
         # applying an element-wise sigmoidal activation function as all 5
         # bounding boxes' output attributes must belong to [0;1] range,
@@ -129,16 +144,6 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         outputs = sigmoid(outputs)
         # FIXME: can these sigmoidal computations be carried out together with
         # the loss to achieve better gradients during training?
-
-        # asserting the correctness of the outputs' shape:
-        assert (
-            outputs.shape[1:] == (
-                OUTPUT_GRID_N_ROWS,
-                OUTPUT_GRID_N_COLUMNS,
-                OUTPUT_GRID_CELL_N_ANCHORS,
-                N_OUTPUTS_PER_ANCHOR
-            )
-        ), "Unmatched expectations between outputs and labels shape."
 
         return Model(
             inputs=inputs,

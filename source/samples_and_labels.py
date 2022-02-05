@@ -1,6 +1,6 @@
 """
-Sample and label extraction from the raw dataset files and preprocessing for
-feeding the model.
+Sample and label extraction from the raw dataset files, inspection and
+preprocessing for feeding the model.
 """
 
 
@@ -31,7 +31,6 @@ from numpy import argmin, sum as np_sum, unravel_index, zeros
 from tensorflow import (
     convert_to_tensor,
     float32 as tf_float32,
-    int64 as tf_int64,
     py_function,
     Tensor,
     uint8 as tf_uint8
@@ -53,6 +52,8 @@ from common_constants import (
     OUTPUT_GRID_N_ROWS
 )
 
+
+MINI_BATCH_SIZE = 1024  # TODO
 
 DATASET_DIR = path_join(
     getcwd(),
@@ -86,7 +87,7 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_bounding_boxes,
             inp=[image_path],
-            Tout=(tf_uint8, tf_int64)
+            Tout=(tf_uint8, tf_float32)
         ),
         num_parallel_calls=AUTOTUNE,  # TODO
         deterministic=True
@@ -106,7 +107,7 @@ def dataset_of_samples_and_model_outputs() -> Dataset:
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_model_outputs,
             inp=[image_path],
-            Tout=(tf_uint8, tf_int64)
+            Tout=(tf_uint8, tf_float32)
         ),
         num_parallel_calls=AUTOTUNE,  # TODO
         deterministic=True
@@ -687,7 +688,7 @@ def load_sample_and_get_bounding_boxes(image_path: Tensor) -> Tuple[
                 ] for bounding_box_dict in
                 IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]
             ],
-            dtype=tf_int64
+            dtype=tf_float32
         )
     )
 
@@ -708,7 +709,7 @@ def load_sample_and_get_model_outputs(image_path: Tensor) -> Tuple[
         convert_to_tensor(
             # bounding boxes as network output values:
             value=IMAGE_PATHS_TO_MODEL_OUTPUTS[image_path.numpy()],
-            dtype=tf_int64
+            dtype=tf_float32
         )
     )
 
@@ -879,6 +880,7 @@ def turn_bounding_boxes_to_model_outputs(
 
 # TODO: .cache().prefetch(buffer_size=AUTOTUNE)
 # TODO: .map() to preprocess samples vs preprocessing layer in the network?
+# TODO: .batch() to preprocess samples vs preprocessing layer in the network?
 
 
 if __name__ == '__main__':
