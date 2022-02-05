@@ -1,5 +1,5 @@
 <h1 align="center">
-    Kaggle Competition:<br>
+    YOLO for a Kaggle Competition:<br>
     TensorFlow - Help Protect the Great Barrier Reef<br>
     🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
 </h1>
