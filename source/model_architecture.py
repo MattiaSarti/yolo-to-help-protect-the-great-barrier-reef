@@ -32,14 +32,14 @@ if __name__ != 'main_by_mattia':
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'kernel_size': (3, 3),
     'strides': (1, 1),
-    'padding': 'same',  # TODO
+    'padding': 'same',
     'data_format': 'channels_last',
     'dilation_rate': (1, 1),
     'groups': 1,
     'activation': None,
     'use_bias': True
 }
-FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 64
+FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 16  # TODO
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
 N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
 POOLING_LAYERS_COMMON_KWARGS = {
