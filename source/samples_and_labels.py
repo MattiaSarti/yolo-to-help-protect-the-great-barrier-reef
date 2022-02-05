@@ -54,11 +54,19 @@ if __name__ != 'main_by_mattia':
 MINI_BATCH_SIZE = 4  # TODO
 VALIDATION_SET_PORTION_OF_DATA = 0.3
 
-DATASET_DIR = path_join(
-    getcwd(),
-    pardir,
-    'tensorflow-great-barrier-reef'
-)
+if __name__ != 'main_by_mattia':
+    DATASET_DIR = path_join(
+        getcwd(),
+        pardir,
+        'tensorflow-great-barrier-reef'
+    )
+else:
+    DATASET_DIR = path_join(
+        getcwd(),
+        pardir,
+        'input',
+        'tensorflow-great-barrier-reef'
+    )
 LABELS_FILE_PATH = path_join(
     DATASET_DIR,
     'train.csv'
