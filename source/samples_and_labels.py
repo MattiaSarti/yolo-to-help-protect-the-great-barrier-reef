@@ -739,9 +739,6 @@ def split_dataset_into_batched_training_and_validation_sets(
     n_samples_in_training_set = (
         N_TRAINING_PLUS_VALIDATION_SAMPLES - n_samples_in_validation_set
     )
-    assert (
-        n_samples_in_validation_set == n_samples_in_training_set
-    ), "Ill-conceived code."
 
     training_set = (
         training_plus_validation_set
