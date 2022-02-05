@@ -1,7 +1,7 @@
 <h1 align="center">
-    Kaggle Competition:
-    <br>TensorFlow - Help Protect the Great Barrier Reef
-    <br>🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
+    Kaggle Competition:<br>
+    TensorFlow - Help Protect the Great Barrier Reef<br>
+    🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
 </h1>
 
 Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of the whole competition time left.<br>
