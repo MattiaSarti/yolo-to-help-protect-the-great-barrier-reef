@@ -59,6 +59,8 @@ def create_notebook_assembling_all_source() -> None:
     notebook_cells = [
         # appending markdown headers:
         new_markdown_cell(source=NOTEBOOK_MARKDOWN_HEADERS),
+        # appending a cell with a code illustration header:
+        new_markdown_cell(source='#### Settings'),
         # appending a code cell for the __name__ variable modification so as
         # to run only what required:
         new_code_cell(source="""__name__ == 'main_by_mattia'""")
