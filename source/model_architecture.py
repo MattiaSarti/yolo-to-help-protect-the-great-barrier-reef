@@ -14,6 +14,10 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     Reshape
 )
+from tensorflow.keras.layers.experimental.preprocessing import (
+    RandomFlip,
+    Rescaling
+)
 # pylint: enable=import-error
 
 if __name__ != 'main_by_mattia':
@@ -40,6 +44,8 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'use_bias': True
 }
 FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 16  # TODO
+INPUT_NORMALIZATION_OFFSET = 0.0
+INPUT_NORMALIZATION_RESCALING_FACTOR = (1. / 255)
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
 N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
 POOLING_LAYERS_COMMON_KWARGS = {
@@ -90,9 +96,23 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             shape=(IMAGE_N_ROWS, IMAGE_N_COLUMNS, IMAGE_N_CHANNELS)
         )
 
-        outputs = inputs
-        current_n_of_filters = FIRST_LAYER_N_CONVOLUTIONAL_FILTERS
+        # rescaling the input image to normalize its pixels' intensities:
+        outputs = Rescaling(
+            scale=INPUT_NORMALIZATION_RESCALING_FACTOR,
+            offset=INPUT_NORMALIZATION_OFFSET
+        )(inputs)
 
+        # randomly flipping input images vertically and/or horizontally as a
+        # form of data augmentation during training:
+        outputs = RandomFlip(
+            mode='horizontal_and_vertical',
+            seed=0,
+
+        )(outputs)
+        # NOTE: step carried out here to take advantage of GPU acceleration,
+        # unlike as if it were in the training dataset
+
+        current_n_of_filters = FIRST_LAYER_N_CONVOLUTIONAL_FILTERS
         # for each iso-resolution block of convolutional processing ended by a
         # downsampling:
         for _ in range(DOWNSAMPLING_STEPS):
@@ -121,7 +141,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # NOTE: now bounding boxes' attributes respect the order of meaning
         # (object centered probability, x, y, width, height)
 
-        # asserting the correctness of the outputs' shape:
+        # asserting the correctness of the current outputs' shape:
         assert (
             outputs.shape[1:] == (
                 OUTPUT_GRID_N_ROWS,

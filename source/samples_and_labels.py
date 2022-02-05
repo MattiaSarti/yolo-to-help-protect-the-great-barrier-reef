@@ -942,7 +942,6 @@ N_TRAINING_PLUS_VALIDATION_SAMPLES = len(IMAGE_PATHS_TO_BOUNDING_BOXES)
 
 
 # TODO: .cache().prefetch(buffer_size=AUTOTUNE)
-# TODO: .map() to preprocess samples vs preprocessing layer in the network?
 # TODO: fix determinism for reproducibility
 
 
