@@ -11,14 +11,15 @@ from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 # pylint: enable=import-error
 
-from loss_and_metrics import (
-    iou_threshold_averaged_f2_score, yolov3_variant_loss
-)
-from model_architecture import YOLOv3Variant
-from samples_and_labels import (
-    dataset_of_samples_and_model_outputs,
-    split_dataset_into_batched_training_and_validation_sets
-)
+if __name__ != 'main_by_mattia':
+    from loss_and_metrics import (
+        iou_threshold_averaged_f2_score, yolov3_variant_loss
+    )
+    from model_architecture import YOLOv3Variant
+    from samples_and_labels import (
+        dataset_of_samples_and_model_outputs,
+        split_dataset_into_batched_training_and_validation_sets
+    )
 
 
 LEARNING_RATE = 1e-3

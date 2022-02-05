@@ -34,20 +34,21 @@ from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
-from common_constants import (
-    DATA_TYPE_FOR_INPUTS,
-    DATA_TYPE_FOR_OUTPUTS,
-    IMAGE_N_COLUMNS,
-    IMAGE_N_ROWS,
-    N_OUTPUTS_PER_ANCHOR,
-    OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
-    OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
-    OUTPUT_GRID_CELL_N_ANCHORS,
-    OUTPUT_GRID_CELL_N_COLUMNS,
-    OUTPUT_GRID_CELL_N_ROWS,
-    OUTPUT_GRID_N_COLUMNS,
-    OUTPUT_GRID_N_ROWS
-)
+if __name__ != 'main_by_mattia':
+    from common_constants import (
+        DATA_TYPE_FOR_INPUTS,
+        DATA_TYPE_FOR_OUTPUTS,
+        IMAGE_N_COLUMNS,
+        IMAGE_N_ROWS,
+        N_OUTPUTS_PER_ANCHOR,
+        OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
+        OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
+        OUTPUT_GRID_CELL_N_ANCHORS,
+        OUTPUT_GRID_CELL_N_COLUMNS,
+        OUTPUT_GRID_CELL_N_ROWS,
+        OUTPUT_GRID_N_COLUMNS,
+        OUTPUT_GRID_N_ROWS
+    )
 
 
 MINI_BATCH_SIZE = 4  # TODO

@@ -16,16 +16,17 @@ from tensorflow.keras.layers import (
 )
 # pylint: enable=import-error
 
-from common_constants import (
-    DOWNSAMPLING_STEPS,
-    IMAGE_N_CHANNELS,
-    IMAGE_N_COLUMNS,
-    IMAGE_N_ROWS,
-    N_OUTPUTS_PER_ANCHOR,
-    OUTPUT_GRID_CELL_N_ANCHORS,
-    OUTPUT_GRID_N_COLUMNS,
-    OUTPUT_GRID_N_ROWS
-)
+if __name__ != 'main_by_mattia':
+    from common_constants import (
+        DOWNSAMPLING_STEPS,
+        IMAGE_N_CHANNELS,
+        IMAGE_N_COLUMNS,
+        IMAGE_N_ROWS,
+        N_OUTPUTS_PER_ANCHOR,
+        OUTPUT_GRID_CELL_N_ANCHORS,
+        OUTPUT_GRID_N_COLUMNS,
+        OUTPUT_GRID_N_ROWS
+    )
 
 
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
