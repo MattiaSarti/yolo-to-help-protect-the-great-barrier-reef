@@ -6,6 +6,9 @@ Convenient definitions of common constants.
 from typing import Tuple
 
 from numpy import arange, meshgrid, ndarray, stack
+# pylint: disable=import-error
+from tensorflow import float32 as tf_float32, uint8 as tf_uint8
+# pylint: enable=import-error
 
 
 def compute_grid_cell_centers_xy_coords() -> Tuple[ndarray, ndarray]:
@@ -75,6 +78,9 @@ def compute_grid_cell_centers_xy_coords() -> Tuple[ndarray, ndarray]:
         corners_xy_coords
     )
 
+
+DATA_TYPE_FOR_INPUTS = tf_uint8
+DATA_TYPE_FOR_OUTPUTS = tf_float32
 
 DOWNSAMPLING_STEPS = 4
 

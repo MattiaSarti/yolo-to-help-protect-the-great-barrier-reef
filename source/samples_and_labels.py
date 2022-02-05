@@ -29,18 +29,14 @@ from matplotlib.pyplot import (
 )
 from numpy import argmin, sum as np_sum, unravel_index, zeros
 # pylint: disable=import-error
-from tensorflow import (
-    convert_to_tensor,
-    float32 as tf_float32,
-    py_function,
-    Tensor,
-    uint8 as tf_uint8
-)
+from tensorflow import convert_to_tensor, py_function, Tensor
 from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
 from common_constants import (
+    DATA_TYPE_FOR_INPUTS,
+    DATA_TYPE_FOR_OUTPUTS,
     IMAGE_N_COLUMNS,
     IMAGE_N_ROWS,
     N_OUTPUTS_PER_ANCHOR,
@@ -54,7 +50,7 @@ from common_constants import (
 )
 
 
-MINI_BATCH_SIZE = 1024  # TODO
+MINI_BATCH_SIZE = 4  # TODO
 VALIDATION_SET_PORTION_OF_DATA = 0.3
 
 DATASET_DIR = path_join(
@@ -89,7 +85,7 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_bounding_boxes,
             inp=[image_path],
-            Tout=(tf_uint8, tf_float32)
+            Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
         ),
         num_parallel_calls=AUTOTUNE,  # TODO
         deterministic=True
@@ -119,7 +115,7 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
         map_func=lambda image_path: py_function(
             func=load_sample_and_get_model_outputs,
             inp=[image_path],
-            Tout=(tf_uint8, tf_float32)
+            Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
         ),
         num_parallel_calls=AUTOTUNE,  # TODO
         deterministic=True
@@ -700,7 +696,7 @@ def load_sample_and_get_bounding_boxes(image_path: Tensor) -> Tuple[
                 ] for bounding_box_dict in
                 IMAGE_PATHS_TO_BOUNDING_BOXES[image_path.numpy()]
             ],
-            dtype=tf_float32
+            dtype=DATA_TYPE_FOR_OUTPUTS
         )
     )
 
@@ -721,7 +717,7 @@ def load_sample_and_get_model_outputs(image_path: Tensor) -> Tuple[
         convert_to_tensor(
             # bounding boxes as network output values:
             value=IMAGE_PATHS_TO_MODEL_OUTPUTS[image_path.numpy()],
-            dtype=tf_float32
+            dtype=DATA_TYPE_FOR_OUTPUTS
         )
     )
 
