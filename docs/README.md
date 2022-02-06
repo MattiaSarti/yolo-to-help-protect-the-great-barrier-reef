@@ -12,7 +12,7 @@ But I decided to take the opportunity of working with such a visually beautiful 
 
 [This](https://www.kaggle.com/c/tensorflow-great-barrier-reef) is the competition considered.<br>
 The aim is to implement a single-class object detection algorithm, to distinguish a given kind of starfish in underwater video frames, that can be both trained and applyed for inferences on the test set within the computational limits given.<br>
-The competition results were evaluated in terms of a metric that represents the F2 score, as they decided to favor recalltwice as much as precision, avereaged over different IoU thresholds, which are emplayed select bounding boxes as detected or not, with these thresholds being: {}.<br>
+The competition results were evaluated in terms of a metric that represents the F2 score, as they decided to favor recall twice as much as precision, avereaged over different IoU thresholds for considering bounding boxes as detected or not, with these thresholds being: {0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8}.<br>
 I obtained a score of **TODO** on the competition test set, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
 
 #### A Video Example of My Model in Action:

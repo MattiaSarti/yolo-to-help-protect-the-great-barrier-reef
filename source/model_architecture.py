@@ -31,6 +31,7 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
     )
+    from inference import get_bounding_boxes_from_model_outputs
 
 
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
@@ -189,19 +190,21 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             training=training
         )
 
+        # at inference time:
         if not training:
             # post-processing the bounding boxes outputs to return only the
             # final, filtered and aggregated ones:
-            raise NotImplementedError
-            # TODO:
-            # tf.image.generate_bounding_box_proposals
-            # tf.image.combined_non_max_suppression
-            # tf.image.non_max_suppression
-                # tf.image.non_max_suppression_overlaps
-                # tf.image.non_max_suppression_padded
-                # tf.image.non_max_suppression_with_scores
+            get_bounding_boxes_from_model_outputs(
+                model_outputs=fcn_outputs,
+                from_labels=False
+            )
 
-        return fcn_outputs
+        # at training time:
+        else:
+            # no post-processing:
+            outputs = fcn_outputs
+
+        return outputs
 
 
 if __name__ == '__main__':

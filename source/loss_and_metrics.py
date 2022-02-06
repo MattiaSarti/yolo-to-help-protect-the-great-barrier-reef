@@ -3,14 +3,105 @@ Definitions of the employed loss function and metrics.
 """
 
 
+from typing import List, Tuple
+
 # pylint: disable=import-error
-from tensorflow import Tensor
-from tensorflow.math import reduce_sum
+from tensorflow import convert_to_tensor, stack, Tensor
+from tensorflow.math import reduce_mean
 # pylint: enable=import-error
 
+if __name__ != 'main_by_mattia':
+    from common_constants import (
+        DATA_TYPE_FOR_OUTPUTS
+    )
+    from inference import (
+        get_bounding_boxes_from_model_outputs
+    )
 
-def iou_threshold_averaged_f2_score():
-    raise NotImplementedError
+
+EPSILON = 1e-7
+IOU_THRESHOLDS = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+
+
+def evaluate_bounding_boxes_matching(
+        expected_bounding_boxes: Tensor,
+        predicted_bounding_boxes: Tensor,
+        iou_threshold: float
+) -> Tuple[int, int, int]:
+    """
+    TODO
+    """
+    return (
+        false_positives,
+        false_negatives,
+        true_positives
+    )
+
+
+def f2_score(
+        false_positives: int,
+        false_negatives: int,
+        true_positives: int
+) -> float:
+    """
+    Return the F2-score given the numbers of false positives, false negatives
+    and true positives as inputs.
+    """
+    return (
+        true_positives /
+        (true_positives + 0.8*false_negatives + 0.2*false_positives + EPSILON)
+    )
+
+
+def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
+    """
+    Metric used to validate the model goodness - according to the competition
+    aim - that represents the F2 score, as they decided to favor recall twice
+    as much as precision, avereaged over different IoU thresholds for
+    considering bounding boxes as detected or not, with these thresholds
+    being: {0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8}.
+    """
+    # turning the labels representing model outputs into bounding boxes,
+    # following the same format that the predictions assume at inference time,
+    # when they undergo an additional post-processing, unlike during training:
+    labels_as_bounding_boxes = get_bounding_boxes_from_model_outputs(
+        model_outputs=y_true,
+        from_labels=True
+    )
+
+    f2_scores_for_different_iou_thresholds = []
+
+    for threshold in IOU_THRESHOLDS:
+        (
+            false_positives,
+            false_negatives,
+            true_positives
+        ) = evaluate_bounding_boxes_matching(
+            expected_bounding_boxes=labels_as_bounding_boxes,
+            predicted_bounding_boxes=y_pred,
+            iou_threshold=threshold
+        )
+
+        f2_scores_for_different_iou_thresholds.append(
+            convert_to_tensor(
+                value=[
+                    f2_score(
+                        false_positives=false_positives,
+                        false_negatives=false_negatives,
+                        true_positives=true_positives
+                    )
+                ],
+                dtype=DATA_TYPE_FOR_OUTPUTS
+            )
+        )
+
+    return reduce_mean(
+        input_tensor=stack(
+            values=f2_scores_for_different_iou_thresholds,
+            axis=-1
+        ),
+        axis=-1
+    )
 
 
 def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:
