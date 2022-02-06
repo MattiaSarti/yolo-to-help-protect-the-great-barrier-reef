@@ -105,11 +105,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 
         # randomly flipping input images horizontally as a form of data
         # augmentation during training:
-        outputs = RandomFlip(
-            mode='horizontal',
-            seed=0,
-
-        )(outputs)
+        outputs = RandomFlip(mode='horizontal', seed=0,)(outputs)
         # NOTE: step carried out here to take advantage of GPU acceleration,
         # unlike as if it were in the training dataset
 
