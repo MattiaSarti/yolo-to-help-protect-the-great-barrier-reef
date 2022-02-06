@@ -41,6 +41,7 @@ if __name__ != 'main_by_mattia':
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
         N_OUTPUTS_PER_ANCHOR,
+        OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS,
         OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
         OUTPUT_GRID_CELL_N_ANCHORS,
@@ -935,35 +936,67 @@ def turn_bounding_boxes_to_model_outputs(
             bounding_box['y'] - cell_y_coord / OUTPUT_GRID_CELL_N_ROWS
         )
         relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
-        relative_height = bounding_box['width'] / IMAGE_N_ROWS
+        relative_height = bounding_box['height'] / IMAGE_N_ROWS
 
-        # FIXME: introduce anchors' similarity to choose which anchor
-        label_associated_to_some_anchor = False
-        for anchor_index in range(OUTPUT_GRID_CELL_N_ANCHORS):
-            is_this_ancor_already_full = (
-                labels[cell_row_index, cell_column_index, anchor_index, :] !=
-                [.0] * N_OUTPUTS_PER_ANCHOR
-            ).any()
-            if is_this_ancor_already_full:
-                continue
+        # --------------------------------------------------------------------
+        # # NOTE: outdated code - used before introducing anchors' similarity
+        # # to choose which anchor:
 
-            labels[cell_row_index, cell_column_index, anchor_index, :] = [
-                1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
-                relative_x_coord,
-                relative_y_coord,
-                relative_width,
-                relative_height]
+        # label_associated_to_some_anchor = False
+        # for anchor_index in range(OUTPUT_GRID_CELL_N_ANCHORS):
+        #     is_this_anchor_already_full = (
+        #         labels[cell_row_index, cell_column_index, anchor_index, :] !=
+        #         [.0] * N_OUTPUTS_PER_ANCHOR
+        #     ).any()
+        #     if is_this_anchor_already_full:
+        #         continue
 
-            label_associated_to_some_anchor = True
-            break
+        #     labels[cell_row_index, cell_column_index, anchor_index, :] = [
+        #         1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
+        #         relative_x_coord,
+        #         relative_y_coord,
+        #         relative_width,
+        #         relative_height
+        #     ]
 
-        if not label_associated_to_some_anchor:
+        #     label_associated_to_some_anchor = True
+        #     break
+
+        # if not label_associated_to_some_anchor:
+        #     raise Exception(
+        #         f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
+        #         "a better output resolution are required, as more bounding " +
+        #         "boxes than the set number of anchors are falling within " +
+        #         "the same output cell in this sample."
+        #     )
+        # --------------------------------------------------------------------
+        # getting the index of the anchor with closest aspect ratio to the
+        # considered bounding box:
+        width_to_height_ratio = relative_width / relative_height
+        label_anchor_index = min(
+            OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS,
+            key=lambda x: abs(x - width_to_height_ratio)
+        )
+
+        label_cannot_be_associated_to_respective_anchor = (
+            labels[cell_row_index, cell_column_index, label_anchor_index, :] !=
+            [.0] * N_OUTPUTS_PER_ANCHOR
+        ).any()
+        if label_cannot_be_associated_to_respective_anchor:
             raise Exception(
                 f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
                 "a better output resolution are required, as more bounding " +
                 "boxes than the set number of anchors are falling within " +
                 "the same output cell in this sample."
             )
+
+        labels[cell_row_index, cell_column_index, label_anchor_index, :] = [
+            1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
+            relative_x_coord,
+            relative_y_coord,
+            relative_width,
+            relative_height
+        ]
 
     return labels
 
