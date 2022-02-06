@@ -12,3 +12,6 @@ __pycache__/
 
 # dataset paper:
 /The CSIRO Crown-of-Thorn Starfish Detection Dataset.pdf
+
+# YOLOv3 paper:
+/YOLOv3 - An Incremental Improvement.pdf
