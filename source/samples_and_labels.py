@@ -905,7 +905,7 @@ def turn_bounding_boxes_to_model_outputs(
     """
     Turn the input, raw list of bounding boxes' position information into the
     equivalent information from the model outputs' perspective, as direct
-    supervision labels.
+    supervision labels - for a single image.
     """
     labels = zeros(
         shape=(
@@ -916,7 +916,9 @@ def turn_bounding_boxes_to_model_outputs(
         )
     )
 
+    # for each bounding box in the image:
     for bounding_box in raw_bounding_boxes:
+        # getting information about the grid cell that contains its center:
         (
             cell_row_index,
             cell_column_index,
@@ -929,6 +931,7 @@ def turn_bounding_boxes_to_model_outputs(
             )
         )
 
+        # normalizing the boundinx box coordinates:
         relative_x_coord = (
             (bounding_box['x'] - cell_x_coord) / OUTPUT_GRID_CELL_N_COLUMNS
         )
@@ -938,38 +941,6 @@ def turn_bounding_boxes_to_model_outputs(
         relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
         relative_height = bounding_box['height'] / IMAGE_N_ROWS
 
-        # --------------------------------------------------------------------
-        # # NOTE: outdated code - used before introducing anchors' similarity
-        # # to choose which anchor:
-
-        # label_associated_to_some_anchor = False
-        # for anchor_index in range(OUTPUT_GRID_CELL_N_ANCHORS):
-        #     is_this_anchor_already_full = (
-        #         labels[cell_row_index, cell_column_index, anchor_index, :] !=
-        #         [.0] * N_OUTPUTS_PER_ANCHOR
-        #     ).any()
-        #     if is_this_anchor_already_full:
-        #         continue
-
-        #     labels[cell_row_index, cell_column_index, anchor_index, :] = [
-        #         1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
-        #         relative_x_coord,
-        #         relative_y_coord,
-        #         relative_width,
-        #         relative_height
-        #     ]
-
-        #     label_associated_to_some_anchor = True
-        #     break
-
-        # if not label_associated_to_some_anchor:
-        #     raise Exception(
-        #         f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
-        #         "a better output resolution are required, as more bounding " +
-        #         "boxes than the set number of anchors are falling within " +
-        #         "the same output cell in this sample."
-        #     )
-        # --------------------------------------------------------------------
         # getting the index of the anchor with closest aspect ratio to the
         # considered bounding box:
         width_to_height_ratio = relative_width / relative_height
@@ -978,6 +949,9 @@ def turn_bounding_boxes_to_model_outputs(
             key=lambda x: abs(x - width_to_height_ratio)
         )
 
+        # associating the bounding box attributes to the respective anchor
+        # labels - after checking there are no intrinsic limitations of the
+        # employed design choices:
         label_cannot_be_associated_to_respective_anchor = (
             labels[cell_row_index, cell_column_index, label_anchor_index, :] !=
             [.0] * N_OUTPUTS_PER_ANCHOR
@@ -989,7 +963,6 @@ def turn_bounding_boxes_to_model_outputs(
                 "boxes than the set number of anchors are falling within " +
                 "the same output cell in this sample."
             )
-
         labels[cell_row_index, cell_column_index, label_anchor_index, :] = [
             1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
             relative_x_coord,
