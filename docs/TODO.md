@@ -15,12 +15,18 @@
 ## To Be Implemented:
 - [x] data preprocessing
 - [x] data augmentation
-- [ ] cross validation
+- [x] pre-computations to turn vounding boxes labels into model outputs labels
+- [x] model architecture
+- [x] model training and validation
+- [ ] loss function
+- [ ] post-processing to turn model outputs into predictions of boundinx boxes
+- [ ] competition metric
+- [ ] test set inference
+- [x] fix determinism for reproducibility
 - [ ] checkpoint averaging
-- [ ] post processing to turn model outputs into predictions of boundinx boxes
-- [ ] fix determinism for reproducibility
+- [ ] cross validation
 - [ ] hyperparameter tuning
-- [ ] run many experiments
+- [ ] many experiments
 
 
 # Observations for Optimization
