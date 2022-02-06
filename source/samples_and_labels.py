@@ -41,7 +41,7 @@ if __name__ != 'main_by_mattia':
         DATA_TYPE_FOR_OUTPUTS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
-        N_ANCHORS,
+        N_ANCHORS_PER_CELL,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
@@ -199,7 +199,7 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
             deterministic=True
         )
         # optimizing performances by caching end-results:
-        .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)
+        # .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)  # FIXME
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
@@ -812,7 +812,7 @@ def split_dataset_into_batched_training_and_validation_sets(
             deterministic=True
         )
         # optimizing performances by caching end-results:
-        .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
+        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)  # FIXME
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
@@ -829,7 +829,7 @@ def split_dataset_into_batched_training_and_validation_sets(
             deterministic=True
         )
         # optimizing performances by caching end-results:
-        .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
+        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)  # FIXME
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
@@ -894,7 +894,7 @@ def show_dataset_as_movie(
                             :,
                             :
                         ].numpy() == zeros(
-                            shape=(N_ANCHORS, N_OUTPUTS_PER_ANCHOR)
+                            shape=(N_ANCHORS_PER_CELL, N_OUTPUTS_PER_ANCHOR)
                         )
                     ).all():
                         continue
@@ -937,7 +937,7 @@ def turn_bounding_boxes_to_model_outputs(
         shape=(
             OUTPUT_GRID_N_ROWS,
             OUTPUT_GRID_N_COLUMNS,
-            N_ANCHORS,
+            N_ANCHORS_PER_CELL,
             N_OUTPUTS_PER_ANCHOR
         )
     )
@@ -983,10 +983,10 @@ def turn_bounding_boxes_to_model_outputs(
         ).any()
         if label_cannot_be_associated_to_respective_anchor:
             raise Exception(
-                f"Either more than {N_ANCHORS} anchors or a better output " +
-                "resolution are required, as more bounding boxes than the " +
-                "set number of anchors are falling within the same output " +
-                "cell in this sample."
+                f"Either more than {N_ANCHORS_PER_CELL} anchors or a " +
+                "better output resolution are required, as more bounding " +
+                "boxes than the set number of anchors are falling within " +
+                "the same output cell in this sample."
             )
         labels[cell_row_index, cell_column_index, label_anchor_index, :] = [
             1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?

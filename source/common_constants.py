@@ -79,6 +79,31 @@ def compute_grid_cell_centers_xy_coords() -> Tuple[ndarray, ndarray]:
     )
 
 
+def compute_weights_to_balance_anchors_emptiness() -> Tuple[float, float]:
+    """
+    Return the weights, for the loss function terms, that balance full vs
+    empty anchors.
+    """
+    average_n_full_anchors_per_image = (
+        AVERAGE_N_BOUNDING_BOXES_PER_IMAGE / N_ANCHORS_PER_IMAGE
+    )
+    average_n_empty_anchors_per_image = (
+        N_ANCHORS_PER_IMAGE - average_n_full_anchors_per_image
+    )
+
+    full_anchors_weight = 1 / average_n_full_anchors_per_image
+    empty_anchors_weight = 1  / average_n_empty_anchors_per_image
+
+    weights_sum = full_anchors_weight + empty_anchors_weight
+    
+    normalized_full_anchors_weight = full_anchors_weight / weights_sum
+    normalized_empty_anchors_weight = empty_anchors_weight / weights_sum
+
+    return normalized_full_anchors_weight, normalized_empty_anchors_weight
+
+
+AVERAGE_N_BOUNDING_BOXES_PER_IMAGE = 0.51
+
 DATA_TYPE_FOR_INPUTS = tf_uint8
 DATA_TYPE_FOR_OUTPUTS = tf_float32
 
@@ -101,7 +126,7 @@ assert all(
         ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS
     ]
 )
-N_ANCHORS = len(
+N_ANCHORS_PER_CELL = len(
     ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS
 )
 
@@ -114,7 +139,22 @@ OUTPUT_GRID_CELL_N_ROWS = 16  # NOTE: this may vary with the architecture
 OUTPUT_GRID_N_COLUMNS = int(IMAGE_N_COLUMNS / OUTPUT_GRID_CELL_N_COLUMNS)
 OUTPUT_GRID_N_ROWS = int(IMAGE_N_ROWS / OUTPUT_GRID_CELL_N_ROWS)
 
+N_ANCHORS_PER_IMAGE = (
+    OUTPUT_GRID_N_COLUMNS * OUTPUT_GRID_N_ROWS * N_ANCHORS_PER_CELL
+)
+
 (
     OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
     OUTPUT_GRID_CELL_CORNERS_XY_COORDS
 ) = compute_grid_cell_centers_xy_coords()
+
+(
+    LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
+    LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
+) = compute_weights_to_balance_anchors_emptiness()
+# FIXME: is this balancing reasonable?  with 0.999999990162037 vs 9.837962962962963e-09,
+# using float32 will truncate the second term to 0!!
+(
+    LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
+    LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
+) = (0.5, 0.5)

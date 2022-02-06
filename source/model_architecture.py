@@ -26,7 +26,7 @@ if __name__ != 'main_by_mattia':
         IMAGE_N_CHANNELS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
-        N_ANCHORS,
+        N_ANCHORS_PER_CELL,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
@@ -44,7 +44,7 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'activation': None,
     'use_bias': True
 }
-FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 16  # TODO
+FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 4 #16  # TODO
 INPUT_NORMALIZATION_OFFSET = 0.0
 INPUT_NORMALIZATION_RESCALING_FACTOR = (1. / 255)
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
@@ -130,7 +130,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
         outputs = Convolution2D(
-            filters=(N_ANCHORS * N_OUTPUTS_PER_ANCHOR),
+            filters=(N_ANCHORS_PER_CELL * N_OUTPUTS_PER_ANCHOR),
             **(
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
             )
@@ -143,7 +143,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             outputs.shape[1:] == (
                 OUTPUT_GRID_N_ROWS,
                 OUTPUT_GRID_N_COLUMNS,
-                N_ANCHORS * N_OUTPUTS_PER_ANCHOR
+                N_ANCHORS_PER_CELL * N_OUTPUTS_PER_ANCHOR
             )
         ), "Unmatched expectations between outputs and labels shape."
 
@@ -153,7 +153,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             target_shape=(
                 OUTPUT_GRID_N_ROWS,
                 OUTPUT_GRID_N_COLUMNS,
-                N_ANCHORS,
+                N_ANCHORS_PER_CELL,
                 N_OUTPUTS_PER_ANCHOR
             )
         )(outputs)
@@ -164,8 +164,15 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # attribute) or relative coordinates (the second and third one) or
         # relative sizes (the fourth and fifth one):
         outputs = sigmoid(outputs)
-        # FIXME: can these sigmoidal computations be carried out together with
-        # the loss to achieve better gradients during training?
+        # NOTE: these sigmoidal computations are carried out here instead of
+        # with the loss computation (and during inference) since computing
+        # them together with the loss functions's operations would not allow
+        # to achieve better gradients during training, since the objectness
+        # score needs to undergo the sigmoidal transformation beforehand and
+        # the other attributes of the anchors do not udnergo transformations
+        # as BCE, that can be fused together with softmax improving gradients'
+        # flow, but they all undergo MSE instead, since they represent
+        # coordinates and not likelihoods/probabilities
 
         return Model(
             inputs=inputs,

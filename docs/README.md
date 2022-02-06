@@ -32,3 +32,35 @@ Looking at the root directory of the repository:
 ## Innovative Aspects
 
 **TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
+
+
+## ...
+
+```
+Bounding Boxes' Statistics:
+        - total number of bounding boxes: 11898
+        - total number of images: 23501
+        - average number of bounding boxes per image: 0.51
+        - minimum number of bounding boxes per image: 0
+        - maximum number of bounding boxes per image: 18
+        - total number of empty images: 18582
+        - average bounding box height [pixels]: 42.72
+        - average bounding box width [pixels]: 47.89
+        - average bounding boxes' centers distance [pixels]: 177.17
+        - average bounding boxes' centers x-coord distance [pixels]: 130.74
+        - average bounding boxes' centers y-coord distance [pixels]: 95.98
+        - minimum bounding box height [pixels]: 13
+        - minimum bounding box width [pixels]: 17
+        - minimum bounding boxes' centers distance [pixels]: 3.04
+        - minimum bounding boxes' centers x-coord distance [pixels]: 0.0
+        - minimum bounding boxes' centers y-coord distance [pixels]: 0.0
+        - maximum bounding box height [pixels]: 222
+        - maximum bounding box width [pixels]: 243
+        - maximum bounding boxes' centers distance [pixels]: 578.48
+        - maximum bounding boxes' centers x-coord distance [pixels]: 565.5
+        - maximum bounding boxes' centers y-coord distance [pixels]: 350.0
+        - histogram of number of bounding boxes per image: see plot
+        - histogram of bounding boxes' centers distance [pixels]: see plot
+        - histogram of bounding boxes' centers x-coord distance [pixels]: see plot
+        - histogram of bounding boxes' centers y-coord distance [pixels]: see plot
+```

@@ -42,7 +42,7 @@ def train_and_validate_model(
     model_instance.compile(
         optimizer=Adam(learning_rate=LEARNING_RATE),
         loss=yolov3_variant_loss,
-        metrics=[iou_threshold_averaged_f2_score]
+        metrics=[]  # TODO iou_threshold_averaged_f2_score
     )
 
     training_history = model_instance.fit(
