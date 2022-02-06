@@ -13,13 +13,14 @@
     - [x] which for of input image normalization is better? absolute (relative to the training set overall statistics) or relative (each sample normalized to have given mean and std)? learnable or fixed?
 
 ## To Be Implemented:
+- [x] data loadage and splitting
 - [x] data preprocessing
 - [x] data augmentation
-- [x] pre-computations to turn vounding boxes labels into model outputs labels
+- [x] labels pre-processing (bounding boxes labels → model outputs labels)
 - [x] model architecture
 - [x] model training and validation
 - [ ] loss function
-- [ ] post-processing to turn model outputs into predictions of boundinx boxes
+- [ ] post-processing (model outputs → predictions of boundinx boxes)
 - [ ] competition metric
 - [ ] test set inference
 - [x] fix determinism for reproducibility
