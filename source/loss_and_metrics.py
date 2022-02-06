@@ -5,6 +5,7 @@ Definitions of the employed loss function and metrics.
 
 from typing import List, Tuple
 
+from numpy import arange, ndarray
 # pylint: disable=import-error
 from tensorflow import convert_to_tensor, stack, Tensor
 from tensorflow.math import reduce_mean
@@ -27,7 +28,7 @@ def evaluate_bounding_boxes_matching(
         expected_bounding_boxes: Tensor,
         predicted_bounding_boxes: Tensor,
         iou_threshold: float
-) -> Tuple[int, int, int]:
+) -> Tuple[Tensor, Tensor, Tensor]:
     """
     TODO
     """
@@ -35,21 +36,6 @@ def evaluate_bounding_boxes_matching(
         false_positives,
         false_negatives,
         true_positives
-    )
-
-
-def f2_score(
-        false_positives: int,
-        false_negatives: int,
-        true_positives: int
-) -> float:
-    """
-    Return the F2-score given the numbers of false positives, false negatives
-    and true positives as inputs.
-    """
-    return (
-        true_positives /
-        (true_positives + 0.8*false_negatives + 0.2*false_positives + EPSILON)
     )
 
 
@@ -69,7 +55,7 @@ def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
         from_labels=True
     )
 
-    f2_scores_for_different_iou_thresholds = []
+    mean_f2_scores_for_different_iou_thresholds = []
 
     for threshold in IOU_THRESHOLDS:
         (
@@ -82,25 +68,48 @@ def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
             iou_threshold=threshold
         )
 
-        f2_scores_for_different_iou_thresholds.append(
-            convert_to_tensor(
-                value=[
-                    f2_score(
-                        false_positives=false_positives,
-                        false_negatives=false_negatives,
-                        true_positives=true_positives
-                    )
-                ],
-                dtype=DATA_TYPE_FOR_OUTPUTS
+        mean_f2_scores_for_different_iou_thresholds.append(
+            # ----------------------------------------------------------------
+            # convert_to_tensor(
+            #     value=[
+            #         mean_f2_scores(
+            #             false_positives=false_positives,
+            #             false_negatives=false_negatives,
+            #             true_positives=true_positives
+            #         )
+            #     ],
+            #     dtype=DATA_TYPE_FOR_OUTPUTS
+            # )
+            # ----------------------------------------------------------------
+            mean_f2_scores(
+                false_positives=false_positives,
+                false_negatives=false_negatives,
+                true_positives=true_positives
             )
         )
 
     return reduce_mean(
         input_tensor=stack(
-            values=f2_scores_for_different_iou_thresholds,
+            values=mean_f2_scores_for_different_iou_thresholds,
             axis=-1
         ),
         axis=-1
+    )
+
+
+def mean_f2_scores(
+        false_positives: Tensor,
+        false_negatives: Tensor,
+        true_positives: Tensor
+) -> Tensor:
+    """
+    Return the F2-scores of each mini-batch sample, given their numbers of
+    false positives, false negatives and true positives as inputs.
+    """
+    # FIXME: vectorize considering batches and with TF
+    return (
+        true_positives /
+        (true_positives + 0.8*false_negatives + 0.2*false_positives + EPSILON)
     )
 
 

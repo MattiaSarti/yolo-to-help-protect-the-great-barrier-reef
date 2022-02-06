@@ -31,20 +31,20 @@ def get_bounding_boxes_from_model_outputs(
     """
     # when the model outputs are intended as labels:
     if from_labels:
-        # the IoU threshold is not relevant when the input model outputs represent
-        # labels as labels are already discretized:
+        # non-maximum suppression and the IoU threshold are not relevant when
+        # the model outputs represent labels as they are already discretized:
         pass
 
     # when the model outputs are intended as predictions:
     else:
         pass
 
-    IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION
-    
     # tf.image.generate_bounding_box_proposals
     # tf.image.combined_non_max_suppression
     # tf.image.non_max_suppression
         # tf.image.non_max_suppression_overlaps
         # tf.image.non_max_suppression_padded
         # tf.image.non_max_suppression_with_scores
+    IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION
+
     raise NotImplementedError
