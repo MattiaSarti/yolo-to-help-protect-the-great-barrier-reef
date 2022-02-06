@@ -8,8 +8,9 @@
     - [x] number of training-plus-validation images: 23501
     - [x] number of test images: ~ 13000
     - [x] bounding boxes statistics: see docs & code
-- [ ] preprocessing:
-    - [ ] which for of input image normalization is better? absolute (relative to the training set overall statistics) or relative (each sample normalized to have given mean and std)? learnable or fixed?
+- [x] preprocessing:
+    - [x] what data augmentation? I have no domain knowledge ⇒ I can only assume that horizontal flips are a valid data augmentation schema, while vertical flips and any other image transformation (e.g. cropping, resizing, zooming, exposure/brightness/color changes, histogram stretchings, elastic deformations) could distort the task optimization
+    - [x] which for of input image normalization is better? absolute (relative to the training set overall statistics) or relative (each sample normalized to have given mean and std)? learnable or fixed?
 
 ## To Be Implemented:
 - [x] data preprocessing

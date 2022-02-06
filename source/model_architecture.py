@@ -103,10 +103,10 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             offset=INPUT_NORMALIZATION_OFFSET
         )(inputs)
 
-        # randomly flipping input images vertically and/or horizontally as a
-        # form of data augmentation during training:
+        # randomly flipping input images horizontally as a form of data
+        # augmentation during training:
         outputs = RandomFlip(
-            mode='horizontal_and_vertical',
+            mode='horizontal',
             seed=0,
 
         )(outputs)
