@@ -108,7 +108,7 @@ N_ANCHORS = len(
 OUTPUT_GRID_CELL_N_COLUMNS = 16  # NOTE: this may vary with the architecture
 OUTPUT_GRID_CELL_N_ROWS = 16  # NOTE: this may vary with the architecture
 # NOTE: common divisors of 1280 and 720: {1, 2, 4, 5, 8, 10, 16, 20, 40, 80},
-# and the ones that respect the training-plus-validation set vounding boxes'
+# and the ones that respect the training-plus-validation set bounding boxes'
 # distinction when using a single anchor are: {1, 2, 4, 5, 8, 10, 16}
 
 OUTPUT_GRID_N_COLUMNS = int(IMAGE_N_COLUMNS / OUTPUT_GRID_CELL_N_COLUMNS)
