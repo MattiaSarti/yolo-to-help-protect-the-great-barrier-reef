@@ -130,7 +130,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
         outputs = Convolution2D(
-            filters=(N_OUTPUTS_PER_ANCHOR * OUTPUT_GRID_CELL_N_ANCHORS),
+            filters=(N_ANCHORS * N_OUTPUTS_PER_ANCHOR),
             **(
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
             )
