@@ -29,10 +29,11 @@ SOURCE_CODE_DIR = path_join(
 SOURCE_FILENAMES_ORDERED_AS_COPIED = [
     'common_constants.py',
     'samples_and_labels.py',
+    'inference.py',
     'model_architecture.py',
     'loss_and_metrics.py',
     'training_and_validation.py',
-    # 'inference.py'
+    'main.py'
 ]
 
 
