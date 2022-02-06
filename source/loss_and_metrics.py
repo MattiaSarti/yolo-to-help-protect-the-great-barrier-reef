@@ -7,7 +7,14 @@ from typing import List, Tuple
 
 from numpy import arange, ndarray
 # pylint: disable=import-error
-from tensorflow import convert_to_tensor, stack, Tensor, where
+from tensorflow import (
+    broadcast_to,
+    convert_to_tensor,
+    stack,
+    Tensor,
+    where,
+    zeros
+)
 from tensorflow.keras.losses import binary_crossentropy, mean_absolute_error
 from tensorflow.math import (
     add,
@@ -22,16 +29,23 @@ if __name__ != 'main_by_mattia':
     from common_constants import (
         DATA_TYPE_FOR_OUTPUTS,
         LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS,
-        LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS
+        LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
+        OUTPUT_GRID_N_ROWS,
+        OUTPUT_GRID_N_COLUMNS,
+        N_ANCHORS_PER_CELL,
+        N_OUTPUTS_PER_ANCHOR
     )
     from inference import (
         get_bounding_boxes_from_model_outputs
+    )
+    from samples_and_labels import (
+        MINI_BATCH_SIZE
     )
 
 
 EPSILON = 1e-7
 IOU_THRESHOLDS = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
-OBJECTNESS_PROBABILITY_THRESHOLD = 0.5
+OBJECTNESS_PROBABILITY_THRESHOLD = 0.5  # FIXME: not required
 
 
 def evaluate_bounding_boxes_matching(
@@ -146,66 +160,105 @@ def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:
         Output Shape:
             - (MINI_BATCH_SIZE,)
     """
-    print('-'*30)  # TODO
-    print('y_true.shape', y_true.shape)
-    print('y_pred.shape', y_pred.shape)
-    print('-'*30)
-    return reduce_mean(y_true - y_pred)
-    true_anchors_with_objects_flags = greater_equal(
-        x=y_true[..., 0],
-        y=OBJECTNESS_PROBABILITY_THRESHOLD
-    )  # → (samples, rows, columns, anchors)
+    # → (samples, rows, columns, anchors, attributes)
+    full_shape = (
+        MINI_BATCH_SIZE,
+        OUTPUT_GRID_N_ROWS,
+        OUTPUT_GRID_N_COLUMNS,
+        N_ANCHORS_PER_CELL,
+        N_OUTPUTS_PER_ANCHOR
+    )
+
+    dummy_tensor = zeros(
+        shape=full_shape
+    )
+
+    true_anchors_with_objects_flags = broadcast_to(
+        input=greater_equal(
+            x=y_true[..., 0],
+            y=OBJECTNESS_PROBABILITY_THRESHOLD
+        ),
+        shape=full_shape
+    )
+    print('_'*90)
+    print(true_anchors_with_objects_flags.shape)
+    print('_'*90)
     true_anchors_without_objects_flags = logical_not(
         x=true_anchors_with_objects_flags
-    )  # → (samples, rows, columns, anchors)
-
-    true_anchors_with_obejcts_indexes = where(
-        condition=true_anchors_with_objects_flags
-    )  # shape → (active ones, samples, rows, columns, anchors)
-    true_anchors_without_obejcts_indexes = where(
-        condition=true_anchors_without_objects_flags
-    )  # → (inactive ones, samples, rows, columns, anchors)
+    )
 
     full_anchors_objectness_loss_per_anchor = binary_crossentropy(
-        y_true=y_true[true_anchors_with_obejcts_indexes][..., 0],
-        y_pred=y_pred[true_anchors_with_obejcts_indexes][..., 0],
+        y_true=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_true,
+            y=dummy_tensor
+        )[..., 0],
+        y_pred=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_pred,
+            y=dummy_tensor
+        )[..., 0],
         from_logits=False,
         axis=-1,
-    )  # → (samples, rows, columns, anchors)
+    )
 
     empty_anchors_objectness_loss_per_anchor = binary_crossentropy(
-        y_true=y_true[true_anchors_without_obejcts_indexes][..., 0],
-        y_pred=y_pred[true_anchors_without_obejcts_indexes][..., 0],
+        y_true=where(
+            condition=true_anchors_without_objects_flags,
+            x=y_true,
+            y=dummy_tensor
+        )[..., 0],
+        y_pred=where(
+            condition=true_anchors_without_objects_flags,
+            x=y_pred,
+            y=dummy_tensor
+        )[..., 0],
         from_logits=False,
         axis=-1,
-    )  # → (samples, rows, columns, anchors)
+    )
 
     full_anchors_coordinates_offsets_loss_per_anchor = mean_absolute_error(
-        y_true=y_true[true_anchors_with_obejcts_indexes][..., 1:3],
-        y_pred=y_pred[true_anchors_with_obejcts_indexes][..., 1:3],
-    )  # → (samples, rows, columns, anchors)
+        y_true=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_true,
+            y=dummy_tensor
+        )[..., 1:3],
+        y_pred=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_pred,
+            y=dummy_tensor
+        )[..., 1:3],
+    )
     full_anchors_coordinates_scales_loss_per_anchor = mean_absolute_error(
-        y_true=y_true[true_anchors_with_obejcts_indexes][..., 3:],
-        y_pred=y_pred[true_anchors_with_obejcts_indexes][..., 3:],
-    )  # → (samples, rows, columns, anchors)
+        y_true=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_true,
+            y=dummy_tensor
+        )[..., 3:],
+        y_pred=where(
+            condition=true_anchors_with_objects_flags,
+            x=y_pred,
+            y=dummy_tensor
+        )[..., 3:],
+    )
 
     full_anchors_coordinates_loss_per_anchor = add(
         x=full_anchors_coordinates_offsets_loss_per_anchor,
         y=full_anchors_coordinates_scales_loss_per_anchor
-    )  # → (samples, rows, columns, anchors)
+    )
 
     full_anchors_mean_loss = reduce_mean(
         input_tensor=add(
             x=full_anchors_objectness_loss_per_anchor,
             y=full_anchors_coordinates_loss_per_anchor
         ),
-        axis=[1, 2, 3]
-    )  # → (samples,)
+        axis=[1, 2, 3, 4]
+    )
 
     empty_anchors_mean_loss = reduce_mean(
         input_tensor=empty_anchors_objectness_loss_per_anchor,
-        axis=[1, 2, 3]
-    )  # shape → (samples,)
+        axis=[1, 2, 3, 4]
+    )
 
     # FIXME: without weighting, here, after mean reduction, it means that both
     # terms will have the same weight, irrespectively of their imbalance
@@ -218,7 +271,7 @@ def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:
             x=empty_anchors_mean_loss,
             y=LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
         )
-    )  # shape → (samples,)
+    )
 
 
 if __name__ == '__main__':
