@@ -90,9 +90,19 @@ IMAGE_N_ROWS = 720
 
 N_OUTPUTS_PER_ANCHOR = 5
 
-OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS = (2.0, 0.5)  # TODO
-OUTPUT_GRID_CELL_N_ANCHORS = len(
-    OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS
+ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS = (
+    (0.6, 0.4),
+    (0.5, 0.5),
+    # (0.4, 0.6)  # NOTE: empirically observed: this anchor is less relevant
+)  # TODO: choose these based on the dataset
+assert all(
+    [
+        (weight[0] + weight[1] == 1) for weight in
+        ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS
+    ]
+)
+N_ANCHORS = len(
+    ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS
 )
 
 OUTPUT_GRID_CELL_N_COLUMNS = 16  # NOTE: this may vary with the architecture

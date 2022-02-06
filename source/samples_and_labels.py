@@ -36,15 +36,15 @@ from tensorflow.io import decode_jpeg, read_file
 
 if __name__ != 'main_by_mattia':
     from common_constants import (
+        ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS,
         DATA_TYPE_FOR_INPUTS,
         DATA_TYPE_FOR_OUTPUTS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
+        N_ANCHORS,
         N_OUTPUTS_PER_ANCHOR,
-        OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS,
         OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
-        OUTPUT_GRID_CELL_N_ANCHORS,
         OUTPUT_GRID_CELL_N_COLUMNS,
         OUTPUT_GRID_CELL_N_ROWS,
         OUTPUT_GRID_N_COLUMNS,
@@ -97,6 +97,85 @@ PICTURES_DIR = path_join(
 
 SHOW_BOUNDING_BOXES_STATISTICS = False
 SHOW_DATASET_MOVIES = False
+
+
+def get_cell_containing_bounding_box_center(
+        center_absolute_x_and_y_coords: Tuple[float, float]
+) -> Tuple[int, int, int, int]:
+    """
+    Find the output grid cell whose center is closest to the bounding box one
+    (the input one), returning the grid cell's row and column indexes and its
+    x and y coordinates.
+    ---
+        Output Shape:
+            - (4,)
+    ---
+        Output Meaning:
+            - [
+                grid cell row index,
+                grid cell column index,
+                x coordindate of cell center,
+                y coordindate of cell center
+            ]
+    """
+    (
+        grid_cell_enclosing_bounding_box_center_row_index,
+        grid_cell_enclosing_bounding_box_center_column_index
+    ) = unravel_index(
+        indices=argmin(  # NOTE: in case of equivalent minima, the first one is picked
+            # grid of squared element-wise center pairs' distances representing
+            # the minimized objective to find the closest grid cell center:
+            a=np_sum(
+                a=(
+                    (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
+                    center_absolute_x_and_y_coords) ** 2
+                ),
+                axis=-1
+            )
+        ),
+        shape=(OUTPUT_GRID_N_ROWS, OUTPUT_GRID_N_COLUMNS),
+        order='C'
+    )
+
+    return (
+        # [grid cell row index, grid cell column index]:
+        [
+            grid_cell_enclosing_bounding_box_center_row_index,
+            grid_cell_enclosing_bounding_box_center_column_index
+        ] +
+        # [x coordindate of cell center, y coordindate of cell center]:
+        OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
+            grid_cell_enclosing_bounding_box_center_row_index,
+            grid_cell_enclosing_bounding_box_center_column_index,
+            :
+        ].tolist()
+    )
+
+
+def get_index_of_anchor_with_closest_aspect_ratio(
+        absolute_width: float,
+        absolute_height: float
+) -> int:
+    """
+    Return the index of the anchor whose aspect ratio is close to the
+    considered bounding box represented by the input relative width and
+    relative height.
+    """
+    width_weight = absolute_width / (absolute_width + absolute_height)
+    height_weight = absolute_height / (absolute_width + absolute_height)
+
+    return (
+        ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS.index(
+            sorted(
+                ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS,
+                key=lambda width_vs_height_weights: (
+                    abs(width_vs_height_weights[0] - width_weight) +
+                    abs(width_vs_height_weights[1] - height_weight)
+                ),
+                reverse=False
+            )[0]
+        )
+    )
 
 
 def dataset_of_samples_and_bounding_boxes() -> Dataset:
@@ -157,59 +236,6 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
         ),
         num_parallel_calls=AUTOTUNE,
         deterministic=True
-    )
-
-
-def get_cell_containing_bounding_box_center(
-        center_absolute_x_and_y_coords: Tuple[float, float]
-) -> Tuple[int, int, int, int]:
-    """
-    Find the output grid cell whose center is closest to the bounding box one
-    (the input one), returning the grid cell's row and column indexes and its
-    x and y coordinates.
-    ---
-        Output Shape:
-            - (4,)
-    ---
-        Output Meaning:
-            - [
-                grid cell row index,
-                grid cell column index,
-                x coordindate of cell center,
-                y coordindate of cell center
-            ]
-    """
-    (
-        grid_cell_enclosing_bounding_box_center_row_index,
-        grid_cell_enclosing_bounding_box_center_column_index
-    ) = unravel_index(
-        indices=argmin(  # NOTE: in case of equivalent minima, the first one is picked
-            # grid of squared element-wise center pairs' distances representing
-            # the minimized objective to find the closest grid cell center:
-            a=np_sum(
-                a=(
-                    (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
-                    center_absolute_x_and_y_coords) ** 2
-                ),
-                axis=-1
-            )
-        ),
-        shape=(OUTPUT_GRID_N_ROWS, OUTPUT_GRID_N_COLUMNS),
-        order='C'
-    )
-
-    return (
-        # [grid cell row index, grid cell column index]:
-        [
-            grid_cell_enclosing_bounding_box_center_row_index,
-            grid_cell_enclosing_bounding_box_center_column_index
-        ] +
-        # [x coordindate of cell center, y coordindate of cell center]:
-        OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
-            grid_cell_enclosing_bounding_box_center_row_index,
-            grid_cell_enclosing_bounding_box_center_column_index,
-            :
-        ].tolist()
     )
 
 
@@ -868,7 +894,7 @@ def show_dataset_as_movie(
                             :,
                             :
                         ].numpy() == zeros(
-                            shape=(OUTPUT_GRID_CELL_N_ANCHORS, N_OUTPUTS_PER_ANCHOR)
+                            shape=(N_ANCHORS, N_OUTPUTS_PER_ANCHOR)
                         )
                     ).all():
                         continue
@@ -911,7 +937,7 @@ def turn_bounding_boxes_to_model_outputs(
         shape=(
             OUTPUT_GRID_N_ROWS,
             OUTPUT_GRID_N_COLUMNS,
-            OUTPUT_GRID_CELL_N_ANCHORS,
+            N_ANCHORS,
             N_OUTPUTS_PER_ANCHOR
         )
     )
@@ -943,10 +969,9 @@ def turn_bounding_boxes_to_model_outputs(
 
         # getting the index of the anchor with closest aspect ratio to the
         # considered bounding box:
-        width_to_height_ratio = relative_width / relative_height
-        label_anchor_index = min(
-            OUTPUT_GRID_CELL_ANCHORS_WIDTH_TO_HEIGHT_RATIOS,
-            key=lambda x: abs(x - width_to_height_ratio)
+        label_anchor_index = get_index_of_anchor_with_closest_aspect_ratio(
+            absolute_width=bounding_box['width'],
+            absolute_height=bounding_box['height']
         )
 
         # associating the bounding box attributes to the respective anchor
@@ -958,10 +983,10 @@ def turn_bounding_boxes_to_model_outputs(
         ).any()
         if label_cannot_be_associated_to_respective_anchor:
             raise Exception(
-                f"Either more than {OUTPUT_GRID_CELL_N_ANCHORS} anchors or " +
-                "a better output resolution are required, as more bounding " +
-                "boxes than the set number of anchors are falling within " +
-                "the same output cell in this sample."
+                f"Either more than {N_ANCHORS} anchors or a better output " +
+                "resolution are required, as more bounding boxes than the " +
+                "set number of anchors are falling within the same output " +
+                "cell in this sample."
             )
         labels[cell_row_index, cell_column_index, label_anchor_index, :] = [
             1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?

@@ -26,8 +26,8 @@ if __name__ != 'main_by_mattia':
         IMAGE_N_CHANNELS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
+        N_ANCHORS,
         N_OUTPUTS_PER_ANCHOR,
-        OUTPUT_GRID_CELL_N_ANCHORS,
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
     )
@@ -143,7 +143,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             outputs.shape[1:] == (
                 OUTPUT_GRID_N_ROWS,
                 OUTPUT_GRID_N_COLUMNS,
-                OUTPUT_GRID_CELL_N_ANCHORS * N_OUTPUTS_PER_ANCHOR
+                N_ANCHORS * N_OUTPUTS_PER_ANCHOR
             )
         ), "Unmatched expectations between outputs and labels shape."
 
@@ -153,7 +153,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             target_shape=(
                 OUTPUT_GRID_N_ROWS,
                 OUTPUT_GRID_N_COLUMNS,
-                OUTPUT_GRID_CELL_N_ANCHORS,
+                N_ANCHORS,
                 N_OUTPUTS_PER_ANCHOR
             )
         )(outputs)
