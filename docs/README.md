@@ -27,3 +27,8 @@ Looking at the root directory of the repository:
     - the folder ***/docs/pictures*** is just a folder that contains small memories that give a taste of the competition, since the dataset can not be publicly shared
     - the file ***/docs/TODO.md*** is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
     - the file ***/docs/README.md*** is what you are reading now
+
+
+## Innovative Aspects
+
+**TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
