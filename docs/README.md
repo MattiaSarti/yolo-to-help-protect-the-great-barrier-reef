@@ -5,7 +5,7 @@
 </h1>
 
 Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of the whole competition time left.<br>
-But I decided to take the opportunity of working with such a visually beautiful dataset to learn by implementing a simplified version of YOLOv3 myself from scratch, having fun exploring the dataset, defining the model, training and evaluating it while knowing in advance it would not have had the capacity of more advanced models and there was not time for an extensive hyperparameter tuning.<br>
+But I decided to take the opportunity of working with such a visually beautiful dataset to learn by implementing a simplified version of YOLO (specifically a variant of v3) myself - completely from scratch - having fun exploring the dataset, defining the model, training and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models.<br>
 
 
 ## Repository Structure
@@ -16,3 +16,9 @@ Looking at the root directory of the repository:
     - the folder ***/docs/pictures*** is just a folder that contains small memories that give a taste of the competition, since the dataset can not be publicly shared
     - the file ***/docs/TODO.md*** is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
     - the file ***/docs/README.md*** is what you are reading now
+
+
+## Competition (Briefly)
+
+**TODO**<br>
+The competition results were evaluated in terms of a metric that represents the F2 score, as they decided to favor recalltwice as much as precision, avereaged over different IoU thresholds, which are emplayed select bounding boxes as detected or not, with these thresholds being: {}. I obtained a score of **TODO** on the competition test set.<br>
