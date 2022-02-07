@@ -31,7 +31,7 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
     )
-    from inference import get_bounding_boxes_from_model_outputs
+    # from inference import get_bounding_boxes_from_model_outputs
 
 
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
@@ -193,21 +193,28 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             training=training
         )
 
-        # at inference time:
-        if not training:
-            # post-processing the bounding boxes outputs to return only the
-            # final, filtered and aggregated ones:
-            get_bounding_boxes_from_model_outputs(
-                model_outputs=fcn_outputs,
-                from_labels=False
-            )
+        # --------------------------------------------------------------------
+        # NOTE: this step is not carried out here because the validation loss
+        # would not otherwise receive the same inputs as during training when
+        # computed at inference time, with training = False:
 
-        # at training time:
-        else:
-            # no post-processing:
-            outputs = fcn_outputs
+        # # at inference time:
+        # if not training:
+        #     # post-processing the bounding boxes outputs to return only the
+        #     # final, filtered and aggregated ones:
+        #     get_bounding_boxes_from_model_outputs(
+        #         model_outputs=fcn_outputs,
+        #         from_labels=False
+        #     )
+        # # at training time:
+        # else:
+        #     # no post-processing:
+        #     outputs = fcn_outputs
 
-        return outputs
+        # return outputs
+        # --------------------------------------------------------------------
+
+        return fcn_outputs
 
 
 if __name__ == '__main__':

@@ -54,7 +54,7 @@ LABELS_FULL_SHAPE = (
     N_ANCHORS_PER_CELL,
     N_OUTPUTS_PER_ANCHOR
 )
-OBJECTNESS_PROBABILITY_THRESHOLD = 0.5  # FIXME: not required
+OBJECTNESS_PROBABILITY_THRESHOLD = 0.5  # FIXME: currently not required
 
 
 def evaluate_bounding_boxes_matching(

@@ -61,6 +61,7 @@ if __name__ == '__main__':
     ) = split_dataset_into_batched_training_and_validation_sets(
         training_plus_validation_set=dataset_of_samples_and_model_outputs()
     )
+
     model = YOLOv3Variant()
 
     training_history = train_and_validate_model(

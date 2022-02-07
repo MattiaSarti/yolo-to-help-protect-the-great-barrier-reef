@@ -11,6 +11,10 @@ from tensorflow.random import set_seed
 # pylint: enable=import-error
 
 if __name__ != 'main_by_mattia':
+    from inference import (
+        convert_bounding_boxes_to_submission_format,
+        get_bounding_boxes_from_model_outputs
+    )
     from model_architecture import YOLOv3Variant
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,

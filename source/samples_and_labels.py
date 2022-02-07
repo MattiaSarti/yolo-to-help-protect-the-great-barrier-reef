@@ -11,7 +11,6 @@ from math import sqrt
 from os import getcwd, pardir
 from os.path import join as path_join
 from typing import Dict, List, Tuple
-from cv2 import determinant
 
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import (
@@ -122,9 +121,10 @@ def get_cell_containing_bounding_box_center(
         grid_cell_enclosing_bounding_box_center_row_index,
         grid_cell_enclosing_bounding_box_center_column_index
     ) = unravel_index(
-        indices=argmin(  # NOTE: in case of equivalent minima, the first one is picked
-            # grid of squared element-wise center pairs' distances representing
-            # the minimized objective to find the closest grid cell center:
+        indices=argmin(
+            # NOTE: in case of equivalent minima, the first one is picked grid
+            # of squared element-wise center pairs' distances representing the
+            # minimized objective to find the closest grid cell center:
             a=np_sum(
                 a=(
                     (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
