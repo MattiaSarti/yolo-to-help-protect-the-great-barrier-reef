@@ -15,10 +15,13 @@ from tensorflow import (
     tile
 )
 from tensorflow.image import combined_non_max_suppression
+from tensorflow.math import add, multiply
 # pylint: enable=import-error
 
 if __name__ != 'main_by_mattia':
     from common_constants import (
+        IMAGE_N_COLUMNS,
+        IMAGE_N_ROWS,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
         OUTPUT_GRID_CELL_N_COLUMNS,
@@ -42,9 +45,74 @@ def batched_anchors_rel_to_abs_x_y_w_h(
         batched_anchors_corners_absolute_x_y: Tensor
 ) -> Tensor:
     """
-    TODO
+    Turn batches of several anchors each where every anchor is represented by
+    relative (x, y, w, h) values, into batches of the same anchors where each
+    anchor is represented by absolute (x, y, w, h) values.
+    ---
+        Input Shapes:
+            - (
+                VARIABLE_N_SAMPLES,
+                N_ANCHORS_PER_IMAGE,
+                1,
+                4
+            )
+            - (
+                VARIABLE_N_SAMPLES,
+                N_ANCHORS_PER_IMAGE,
+                2
+            )
+    ---
+        Output Shape:
+            - (
+                VARIABLE_N_SAMPLES,
+                N_ANCHORS_PER_IMAGE,
+                1,
+                4
+            )
     """
-    pass
+    expanded_batched_anchors_corners_absolute_x_y = expand_dims(
+        input=batched_anchors_corners_absolute_x_y,
+        axis=2
+    )
+
+    batched_anchors_absolute_x = add(
+        x=multiply(
+            x=batched_anchors_relative_x_y_w_h[..., 0],
+            y=OUTPUT_GRID_CELL_N_COLUMNS
+        ),  # shape → (samples, anchors_per_image, 1)
+        y=expanded_batched_anchors_corners_absolute_x_y[..., 0]
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_y = add(
+        x=multiply(
+            x=batched_anchors_relative_x_y_w_h[..., 1],
+            y=OUTPUT_GRID_CELL_N_ROWS
+        ),  # shape → (samples, anchors_per_image, 1)
+        y=expanded_batched_anchors_corners_absolute_x_y[..., 1]
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_w = multiply(
+        x=batched_anchors_relative_x_y_w_h[..., 2],
+        y=IMAGE_N_COLUMNS
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_h = multiply(
+        x=batched_anchors_relative_x_y_w_h[..., 3],
+        y=IMAGE_N_ROWS
+    )  # shape → (samples, anchors_per_image, 1)
+
+    return expand_dims(
+        input=concat(
+            values=(
+                batched_anchors_absolute_x,
+                batched_anchors_absolute_y,
+                batched_anchors_absolute_w,
+                batched_anchors_absolute_h
+            ),
+            axis=-1
+        ),  # shape → (samples, anchors_per_image, 4)
+        axis=2
+    )  # shape → (samples, anchors_per_image, 1, 4)
 
 
 def batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
