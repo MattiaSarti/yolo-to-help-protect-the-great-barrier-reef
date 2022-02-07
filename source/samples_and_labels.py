@@ -198,8 +198,9 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
-        # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)  # FIXME
+        # FIXME
+        # # optimizing performances by caching end-results:
+        # .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
@@ -218,7 +219,7 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
     # a shuffling buffer size that allows to take the whole set into memory
     # in case shuffling is desired:
     if shuffle:
-        image_paths_dataset.shuffle(
+        image_paths_dataset = image_paths_dataset.shuffle(
             buffer_size=N_TRAINING_PLUS_VALIDATION_SAMPLES,
             seed=0,
             reshuffle_each_iteration=False  # NOTE: relevant when splitting
@@ -811,8 +812,9 @@ def split_dataset_into_batched_training_and_validation_sets(
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
-        # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)  # FIXME
+        # FIXME
+        # # optimizing performances by caching end-results:
+        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
@@ -828,8 +830,9 @@ def split_dataset_into_batched_training_and_validation_sets(
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
-        # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)  # FIXME
+        # FIXME
+        # # optimizing performances by caching end-results:
+        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
         # optimizing performances by pre-fetching final elements:
         .prefetch(buffer_size=AUTOTUNE)
     )
