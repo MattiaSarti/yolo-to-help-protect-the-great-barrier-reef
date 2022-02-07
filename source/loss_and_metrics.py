@@ -54,7 +54,6 @@ LABELS_FULL_SHAPE = (
     N_ANCHORS_PER_CELL,
     N_OUTPUTS_PER_ANCHOR
 )
-OBJECTNESS_PROBABILITY_THRESHOLD = 0.5  # FIXME: currently not required
 
 
 def evaluate_bounding_boxes_matching(
@@ -175,7 +174,7 @@ def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:
         input=expand_dims(
             input=greater_equal(
                 x=y_true[..., 0],
-                y=OBJECTNESS_PROBABILITY_THRESHOLD
+                y=0.5
             ),
             axis=-1
         ),

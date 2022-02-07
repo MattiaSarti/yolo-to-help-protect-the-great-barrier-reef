@@ -31,12 +31,12 @@ if __name__ != 'main_by_mattia':
     from common_constants import (
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
+        N_ANCHORS_PER_CELL,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
         OUTPUT_GRID_CELL_N_COLUMNS,
         OUTPUT_GRID_CELL_N_ROWS
     )
-    from loss_and_metrics import OBJECTNESS_PROBABILITY_THRESHOLD
     from model_architecture import YOLOv3Variant
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,
@@ -44,6 +44,7 @@ if __name__ != 'main_by_mattia':
     )
 
 
+OBJECTNESS_PROBABILITY_THRESHOLD = 0.5  # FIXME: currently not required
 IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION = 0.5
 MINIMUM_BOUNDING_BOX_SIDE_DIMENSION_TOLERANCE = 0.1
 MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS = 100
@@ -303,7 +304,7 @@ def get_bounding_boxes_from_model_outputs(
                 ),  # shape → (samples, rows, columns, 2)
                 axis=3
             ),  # shape → (samples, rows, columns, 1, 2)
-            multiples=(n_mini_batch_samples, 1, 1, 1)
+            multiples=(1, 1, 1, N_ANCHORS_PER_CELL, 1)
         ),  # shape → (samples, rows, columns, anchors_per_cell, 2)
         shape=(n_mini_batch_samples, -1, 2)
     )  # shape → (samples, anchors_per_image, 2)
@@ -322,6 +323,7 @@ def get_bounding_boxes_from_model_outputs(
             ),
             axis=None
         )  # shape → (samples, anchors_per_image)
+        print('_'*90); print(indexes_of_full_anchors_outputs.shape); print('_'*90)  # TODO: clean
 
         full_anchors_outputs = anchors_outputs[
             indexes_of_full_anchors_outputs
@@ -345,7 +347,7 @@ def get_bounding_boxes_from_model_outputs(
                 axis=2
             ),  # shape → (samples, boxes, 1, 4)
             batched_anchors_corners_absolute_x_y=expand_dims(
-                input=indexes_of_full_anchors_outputs,
+                input=full_anchors_corners_absolute_x_y,
                 axis=2
             )  # shape → (samples, boxes, 1, 2)
         )  # shape → (samples, boxes, 1, 4)
