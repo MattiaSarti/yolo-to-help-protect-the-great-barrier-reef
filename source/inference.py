@@ -7,15 +7,18 @@ from typing import List, Tuple
 
 # pylint: disable=import-error
 from tensorflow import (
+    cast,
     concat,
     convert_to_tensor,
     expand_dims,
+    gather_nd,
     reshape,
     squeeze,
     stack,
     Tensor,
     tile,
-    where
+    where,
+    zeros
 )
 from tensorflow.image import combined_non_max_suppression
 from tensorflow.math import (
@@ -29,9 +32,11 @@ from tensorflow.math import (
 
 if __name__ != 'main_by_mattia':
     from common_constants import (
+        DATA_TYPE_FOR_OUTPUTS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
         N_ANCHORS_PER_CELL,
+        N_ANCHORS_PER_IMAGE,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
         OUTPUT_GRID_CELL_N_COLUMNS,
@@ -83,15 +88,18 @@ def batched_anchors_rel_to_abs_x_y_w_h(
                 4
             )
     """
-    expanded_batched_anchors_corners_absolute_x_y = expand_dims(
-        input=batched_anchors_corners_absolute_x_y,
-        axis=2
+    expanded_batched_anchors_corners_absolute_x_y = cast(
+        x=expand_dims(
+            input=batched_anchors_corners_absolute_x_y,
+            axis=2
+        ),
+        dtype=DATA_TYPE_FOR_OUTPUTS
     )  # shape → (samples, anchors_per_image, 1, 2)
 
     batched_anchors_absolute_x = add(
         x=multiply(
             x=batched_anchors_relative_x_y_w_h[..., 0],
-            y=OUTPUT_GRID_CELL_N_COLUMNS
+            y=float(OUTPUT_GRID_CELL_N_COLUMNS)
         ),  # shape → (samples, anchors_per_image, 1)
         y=expanded_batched_anchors_corners_absolute_x_y[..., 0]
     )  # shape → (samples, anchors_per_image, 1)
@@ -99,7 +107,7 @@ def batched_anchors_rel_to_abs_x_y_w_h(
     batched_anchors_absolute_y = add(
         x=multiply(
             x=batched_anchors_relative_x_y_w_h[..., 1],
-            y=OUTPUT_GRID_CELL_N_ROWS
+            y=float(OUTPUT_GRID_CELL_N_ROWS)
         ),  # shape → (samples, anchors_per_image, 1)
         y=expanded_batched_anchors_corners_absolute_x_y[..., 1]
     )  # shape → (samples, anchors_per_image, 1)
@@ -309,121 +317,74 @@ def get_bounding_boxes_from_model_outputs(
         shape=(n_mini_batch_samples, -1, 2)
     )  # shape → (samples, anchors_per_image, 2)
 
-    # when the model outputs are intended as labels:
-    if from_labels:
-        # non-maximum suppression is not relevant when the model outputs
-        # represent labels as they are already discretized:
+    # applying non-maximum suppression to generate robust bounding box
+    # candidates with respective reliability scores when the model outputs
+    # are intended as predictions - non-maximum suppression is not relevant
+    # when the model outputs are intended as labels as they are already
+    # discretized:
 
-        indexes_of_full_anchors_outputs = squeeze(
-            input=where(
-                condition=greater_equal(
-                    x=anchors_outputs[..., 0],
-                    y=OBJECTNESS_PROBABILITY_THRESHOLD
-                )
-            ),
-            axis=None
-        )  # shape → (samples, anchors_per_image)
-        print('_'*90); print(indexes_of_full_anchors_outputs.shape); print('_'*90)  # TODO: clean
+    # adding a dummy class dimension for the later Tensorflow's function
+    # application - NOTE: a single class in considered in the task of
+    # interest:
+    anchors_outputs = expand_dims(input=anchors_outputs, axis=2)
+    # shape → (samples, anchors_per_image, 1, attributes)
 
-        full_anchors_outputs = anchors_outputs[
-            indexes_of_full_anchors_outputs
-        ]  # shape → (samples, boxes, attributes)
-        full_anchors_corners_absolute_x_y = anchors_corners_absolute_x_y[
-            indexes_of_full_anchors_outputs
-        ]  # shape → (samples, boxes, 2)
-        
-        boxes_scores = full_anchors_outputs[..., 0]  # all ones, not necessary
-        # shape → (samples, boxes)
+    anchors_scores = anchors_outputs[..., 0]
+    # shape → (samples, anchors_per_image, 1)
 
-        boxes_relative_x_y_w_h = full_anchors_outputs[..., 1:]
-        # shape → (samples, boxes, 4)
+    anchors_relative_x_y_w_h = anchors_outputs[..., 1:]
+    # shape → (samples, anchors_per_image, 1, 4)
 
-        # NOTE: a redundant dimension expansion and compression is carried out
-        # to re-utilize the same function definition for (x, y, w, h)
-        # relative-to-absolute conversion:
-        boxes_absolute_x_y_w_h = batched_anchors_rel_to_abs_x_y_w_h(
-            batched_anchors_relative_x_y_w_h=expand_dims(
-                input=boxes_relative_x_y_w_h,
-                axis=2
-            ),  # shape → (samples, boxes, 1, 4)
-            batched_anchors_corners_absolute_x_y=expand_dims(
-                input=full_anchors_corners_absolute_x_y,
-                axis=2
-            )  # shape → (samples, boxes, 1, 2)
-        )  # shape → (samples, boxes, 1, 4)
+    anchors_absolute_x_y_w_h = batched_anchors_rel_to_abs_x_y_w_h(
+        batched_anchors_relative_x_y_w_h=anchors_relative_x_y_w_h,
+        batched_anchors_corners_absolute_x_y=anchors_corners_absolute_x_y
+    )  # shape → (samples, anchors_per_image, 1, 4)
 
-        bounding_boxes_scores_plus_absolute_x_y_w_h = concat(
-            values=(
-                expand_dims(input=boxes_scores, axis=-1),
-                # shape → (samples, boxes, 1)
-                tf_round(
-                    x=squeeze(
-                        input=boxes_absolute_x_y_w_h,
-                        axis=2
-                    )  # shape → (samples, boxes, 4)
-                )  # shape → (samples, boxes, 4)
-            ),
-            axis = -1
-        )  # shape → (samples, boxes, 5)
+    anchors_absolute_x1_y1_x2_y2 = batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
+        batched_anchors_absolute_x_y_w_h=anchors_absolute_x_y_w_h
+    )  # shape → (samples, anchors_per_image, 1, 4)
 
-    # when the model outputs are intended as predictions:
-    else:
-        # applying non-maximum suppression to generate robust bounding box
-        # candidates with respective reliability scores:
+    (
+        boxes_absolute_x1_y1_x2_y2,  # shape → (samples, boxes, 4)
+        boxes_scores,  # shape → (samples, boxes)
+        _,  # class for each sample
+        _  # number of detections for each sample
+    ) = combined_non_max_suppression(
+        boxes=anchors_absolute_x1_y1_x2_y2,
+        scores=anchors_scores,
+        # NOTE: a single class in considered in the task of interest:
+        max_output_size_per_class=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
+        max_total_size=(
+            MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS if not from_labels
+            else N_ANCHORS_PER_IMAGE
+        ),
+        iou_threshold=(
+            IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION if not from_labels
+            else 1.0
+        ),
+        score_threshold=(
+            SCORE_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION if not from_labels
+            else 1.0
+        ),
+        pad_per_class=False,
+        clip_boxes=(True if not from_labels else False)
+    )
 
-        # adding a dummy class dimension for the later Tensorflow's function
-        # application - NOTE: a single class in considered in the task of
-        # interest:
-        anchors_outputs = expand_dims(input=anchors_outputs, axis=2)
-        # shape → (samples, anchors_per_image, 1, attributes)
+    boxes_absolute_x_y_w_h = batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
+        batched_anchors_absolute_x1_y1_x2_y2=boxes_absolute_x1_y1_x2_y2
+    )  # shape → (samples, boxes, 4)
 
-        anchors_scores = anchors_outputs[..., 0]
-        # shape → (samples, anchors_per_image, 1)
+    bounding_boxes_scores_plus_absolute_x_y_w_h = concat(
+        values=(
+            expand_dims(input=boxes_scores, axis=-1),
+            # shape → (samples, boxes, 1)
+            tf_round(x=boxes_absolute_x_y_w_h)
+            # shape → (samples, boxes, 4)
+        ),
+        axis = -1
+    )  # shape → (samples, boxes, 5)
 
-        anchors_relative_x_y_w_h = anchors_outputs[..., 1:]
-        # shape → (samples, anchors_per_image, 1, 4)
-
-        anchors_absolute_x_y_w_h = batched_anchors_rel_to_abs_x_y_w_h(
-            batched_anchors_relative_x_y_w_h=anchors_relative_x_y_w_h,
-            batched_anchors_corners_absolute_x_y=anchors_corners_absolute_x_y
-        )  # shape → (samples, anchors_per_image, 1, 4)
-
-        anchors_absolute_x1_y1_x2_y2 = batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
-            batched_anchors_absolute_x_y_w_h=anchors_absolute_x_y_w_h
-        )  # shape → (samples, anchors_per_image, 1, 4)
-
-        (
-            boxes_absolute_x1_y1_x2_y2,  # shape → (samples, boxes, 4)
-            boxes_scores,  # shape → (samples, boxes)
-            _,  # class for each sample
-            _  # number of detections for each sample
-        ) = combined_non_max_suppression(
-            boxes=anchors_absolute_x1_y1_x2_y2,
-            scores=anchors_scores,
-            max_output_size_per_class=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
-            # NOTE: a single class in considered in the task of interest:
-            max_total_size=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
-            iou_threshold=IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION,
-            score_threshold=SCORE_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION,
-            pad_per_class=False,
-            clip_boxes=True
-        )
-
-        boxes_absolute_x_y_w_h = batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
-            batched_anchors_absolute_x1_y1_x2_y2=boxes_absolute_x1_y1_x2_y2
-        )  # shape → (samples, boxes, 4)
-
-        bounding_boxes_scores_plus_absolute_x_y_w_h = concat(
-            values=(
-                expand_dims(input=boxes_scores, axis=-1),
-                # shape → (samples, boxes, 1)
-                tf_round(x=boxes_absolute_x_y_w_h)
-                # shape → (samples, boxes, 4)
-            ),
-            axis = -1
-        )  # shape → (samples, boxes, 5)
-
-    raise bounding_boxes_scores_plus_absolute_x_y_w_h
+    return bounding_boxes_scores_plus_absolute_x_y_w_h
 
 
 if __name__ == '__main__':
@@ -435,14 +396,15 @@ if __name__ == '__main__':
 
     model = YOLOv3Variant()
 
-    for samples, labels in training_samples_and_labels:
+    for samples_and_labels in training_samples_and_labels:
         _ = get_bounding_boxes_from_model_outputs(
-            model_outputs=labels,
+            model_outputs=samples_and_labels[1],
             from_labels=True
         )
-        predictions = model(samples)
+
+        predictions = model(samples_and_labels[0])
+
         _ = get_bounding_boxes_from_model_outputs(
             model_outputs=predictions,
             from_labels=False
         )
-        break
