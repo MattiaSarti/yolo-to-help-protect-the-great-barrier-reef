@@ -11,11 +11,20 @@ from tensorflow import (
     convert_to_tensor,
     expand_dims,
     reshape,
+    squeeze,
+    stack,
     Tensor,
-    tile
+    tile,
+    where
 )
 from tensorflow.image import combined_non_max_suppression
-from tensorflow.math import add, multiply
+from tensorflow.math import (
+    add,
+    greater_equal,
+    round as tf_round,
+    subtract,
+    multiply
+)
 # pylint: enable=import-error
 
 if __name__ != 'main_by_mattia':
@@ -27,6 +36,7 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_CELL_N_COLUMNS,
         OUTPUT_GRID_CELL_N_ROWS
     )
+    from loss_and_metrics import OBJECTNESS_PROBABILITY_THRESHOLD
     from model_architecture import YOLOv3Variant
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,
@@ -180,9 +190,54 @@ def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
         batched_anchors_absolute_x1_y1_x2_y2: Tensor
 ) -> Tensor:
     """
-    TODO
+    Turn batches of several anchors each where every anchor is represented by
+    absolute (x1, y1, x2, y2) values, into batches of the same anchors where
+     eachanchor is represented by absolute (x, y, w, h) values - x and y
+    represent respectively the x and y coordinates of the top-left corner, w
+    and y represent respectively the width and height of sides, x1 and y1
+    represent respectively the x and y coordinates of the top-left corner, x2
+    and y2 represent respectively the x and y coordinates of the bottom-right
+    corner.
+    ---
+        Input Shape:
+            - (
+                VARIABLE_N_SAMPLES,
+                VARIABLE_N_BOUNDING_BOXES,
+                4
+            )
+    ---
+        Output Shape:
+            - (
+                VARIABLE_N_SAMPLES,
+                VARIABLE_N_BOUNDING_BOXES,
+                4
+            )
     """
-    pass
+    batched_anchors_absolute_x = batched_anchors_absolute_x1_y1_x2_y2[..., 0]
+    # shape → (samples, boxes)
+
+    batched_anchors_absolute_y = batched_anchors_absolute_x1_y1_x2_y2[..., 1]
+    # shape → (samples, boxes)
+
+    batched_anchors_absolute_w = subtract(
+        y=batched_anchors_absolute_x1_y1_x2_y2[..., 2],
+        x=batched_anchors_absolute_x1_y1_x2_y2[..., 0]
+    )  # shape → (samples, boxes)
+
+    batched_anchors_absolute_h = subtract(
+        y=batched_anchors_absolute_x1_y1_x2_y2[..., 3],
+        x=batched_anchors_absolute_x1_y1_x2_y2[..., 1]
+    )  # shape → (samples, boxes)
+
+    return stack(
+        values=(
+            batched_anchors_absolute_x,
+            batched_anchors_absolute_y,
+            batched_anchors_absolute_w,
+            batched_anchors_absolute_h
+        ),
+        axis=-1
+    )  # shape → (samples, boxes, 4)
 
 
 def convert_bounding_boxes_to_submission_format(
@@ -199,10 +254,13 @@ def get_bounding_boxes_from_model_outputs(
         from_labels: bool = False
 ) -> Tensor:
     """
-    format conversion
-    post-processing, non-maximum suppression
-    un-normalization, reconstruction
-    TODO
+    Post-process model outputs by applying format conversion, un-normalization
+    and reconstruction, and also non-maximum suppression in case the inputs do
+    not intended as labels but as predictions, to turn batched model outputs
+    into batches of bounding boxes expressed as (score, x, y, w, h), where x,
+    y, w, and h respectively represent the top-lect corner absolute x and y
+    coordinates and the absolute width and height.
+
     NOTE: in my approach, anchors are just used to create labels as relative
     aspect ratios, neither to recreate predictions nor as absolute sizes -
     that's why anchors are not used here
@@ -252,15 +310,59 @@ def get_bounding_boxes_from_model_outputs(
 
     # when the model outputs are intended as labels:
     if from_labels:
-        # non-maximum suppression and the IoU threshold are not relevant when
-        # the model outputs represent labels as they are already discretized:
-        bounding_boxes_scores_plus_absolute_x_y_w_h = None  # TODO
-        # (Given a value a)
-        # To achieve this in numpy you just have to write :
-        # selected_rows = myarray[myarray[:,0]== a]
-        # In tensorflow, use tf.where :
-        # mytensor[tf.squeeze(tf.where(tf.equal(mytensor[:,0],a), None, None))
-        raise NotImplementedError
+        # non-maximum suppression is not relevant when the model outputs
+        # represent labels as they are already discretized:
+
+        indexes_of_full_anchors_outputs = squeeze(
+            input=where(
+                condition=greater_equal(
+                    x=anchors_outputs[..., 0],
+                    y=OBJECTNESS_PROBABILITY_THRESHOLD
+                )
+            ),
+            axis=None
+        )  # shape → (samples, anchors_per_image)
+
+        full_anchors_outputs = anchors_outputs[
+            indexes_of_full_anchors_outputs
+        ]  # shape → (samples, boxes, attributes)
+        full_anchors_corners_absolute_x_y = anchors_corners_absolute_x_y[
+            indexes_of_full_anchors_outputs
+        ]  # shape → (samples, boxes, 2)
+        
+        boxes_scores = full_anchors_outputs[..., 0]  # all ones, not necessary
+        # shape → (samples, boxes)
+
+        boxes_relative_x_y_w_h = full_anchors_outputs[..., 1:]
+        # shape → (samples, boxes, 4)
+
+        # NOTE: a redundant dimension expansion and compression is carried out
+        # to re-utilize the same function definition for (x, y, w, h)
+        # relative-to-absolute conversion:
+        boxes_absolute_x_y_w_h = batched_anchors_rel_to_abs_x_y_w_h(
+            batched_anchors_relative_x_y_w_h=expand_dims(
+                input=boxes_relative_x_y_w_h,
+                axis=2
+            ),  # shape → (samples, boxes, 1, 4)
+            batched_anchors_corners_absolute_x_y=expand_dims(
+                input=indexes_of_full_anchors_outputs,
+                axis=2
+            )  # shape → (samples, boxes, 1, 2)
+        )  # shape → (samples, boxes, 1, 4)
+
+        bounding_boxes_scores_plus_absolute_x_y_w_h = concat(
+            values=(
+                expand_dims(input=boxes_scores, axis=-1),
+                # shape → (samples, boxes, 1)
+                tf_round(
+                    x=squeeze(
+                        input=boxes_absolute_x_y_w_h,
+                        axis=2
+                    )  # shape → (samples, boxes, 4)
+                )  # shape → (samples, boxes, 4)
+            ),
+            axis = -1
+        )  # shape → (samples, boxes, 5)
 
     # when the model outputs are intended as predictions:
     else:
@@ -313,13 +415,11 @@ def get_bounding_boxes_from_model_outputs(
             values=(
                 expand_dims(input=boxes_scores, axis=-1),
                 # shape → (samples, boxes, 1)
-                boxes_absolute_x_y_w_h
+                tf_round(x=boxes_absolute_x_y_w_h)
                 # shape → (samples, boxes, 4)
             ),
             axis = -1
         )  # shape → (samples, boxes, 5)
-
-    # TODO: discretize x, y, w and h to closest ints: tf.round()
 
     raise bounding_boxes_scores_plus_absolute_x_y_w_h
 
