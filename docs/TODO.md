@@ -19,7 +19,7 @@
 - [x] labels pre-processing (bounding boxes labels → model outputs labels)
 - [x] model architecture
 - [x] model training and validation
-- [ ] loss function
+- [x] loss function
 - [ ] loss function weighting to favor metric
 - [ ] post-processing (model outputs → predictions of boundinx boxes)
 - [ ] competition metric
