@@ -104,7 +104,7 @@ def get_cell_containing_bounding_box_center(
     """
     Find the output grid cell whose center is closest to the bounding box one
     (the input one), returning the grid cell's row and column indexes and its
-    x and y coordinates.
+    top-left corner x and y coordinates.
     ---
         Output Shape:
             - (4,)
@@ -143,8 +143,8 @@ def get_cell_containing_bounding_box_center(
             grid_cell_enclosing_bounding_box_center_row_index,
             grid_cell_enclosing_bounding_box_center_column_index
         ] +
-        # [x coordindate of cell center, y coordindate of cell center]:
-        OUTPUT_GRID_CELL_CENTERS_XY_COORDS[
+        # [x coordindate of cell corner, y coordindate of cell corner]:
+        OUTPUT_GRID_CELL_CORNERS_XY_COORDS[
             grid_cell_enclosing_bounding_box_center_row_index,
             grid_cell_enclosing_bounding_box_center_column_index,
             :
@@ -947,12 +947,13 @@ def turn_bounding_boxes_to_model_outputs(
 
     # for each bounding box in the image:
     for bounding_box in raw_bounding_boxes:
-        # getting information about the grid cell that contains its center:
+        # getting the required information about the grid cell that contains
+        # its center:
         (
             cell_row_index,
             cell_column_index,
-            cell_x_coord,
-            cell_y_coord
+            cell_corner_x_coord,
+            cell_corner_y_coord
         ) = get_cell_containing_bounding_box_center(
             center_absolute_x_and_y_coords=(
                 bounding_box['x'] + (bounding_box['width'] / 2),
@@ -962,10 +963,12 @@ def turn_bounding_boxes_to_model_outputs(
 
         # normalizing the boundinx box coordinates:
         relative_x_coord = (
-            (bounding_box['x'] - cell_x_coord) / OUTPUT_GRID_CELL_N_COLUMNS
+            (bounding_box['x'] - cell_corner_x_coord) /
+            OUTPUT_GRID_CELL_N_COLUMNS
         )
         relative_y_coord = (
-            bounding_box['y'] - cell_y_coord / OUTPUT_GRID_CELL_N_ROWS
+            bounding_box['y'] - cell_corner_y_coord /
+            OUTPUT_GRID_CELL_N_ROWS
         )
         relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
         relative_height = bounding_box['height'] / IMAGE_N_ROWS
