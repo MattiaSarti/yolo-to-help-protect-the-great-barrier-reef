@@ -73,7 +73,7 @@ def batched_anchors_rel_to_abs_x_y_w_h(
     expanded_batched_anchors_corners_absolute_x_y = expand_dims(
         input=batched_anchors_corners_absolute_x_y,
         axis=2
-    )
+    )  # shape → (samples, anchors_per_image, 1, 2)
 
     batched_anchors_absolute_x = add(
         x=multiply(
