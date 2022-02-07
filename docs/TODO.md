@@ -21,7 +21,7 @@
 - [x] model training and validation
 - [x] loss function
 - [ ] loss function weighting to favor the competition metric
-- [ ] post-processing (model outputs → predictions of boundinx boxes)
+- [x] post-processing (model outputs → predictions of boundinx boxes)
 - [ ] competition metric
 - [ ] test set inference
 - [x] fix determinism for reproducibility
