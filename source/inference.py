@@ -47,7 +47,9 @@ def batched_anchors_rel_to_abs_x_y_w_h(
     """
     Turn batches of several anchors each where every anchor is represented by
     relative (x, y, w, h) values, into batches of the same anchors where each
-    anchor is represented by absolute (x, y, w, h) values.
+    anchor is represented by absolute (x, y, w, h) values - x and y represent
+    respectively the x and y coordinates of the top-left corner, w and y
+    represent respectively the width and height of sides.
     ---
         Input Shapes:
             - (
@@ -119,9 +121,59 @@ def batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
         batched_anchors_absolute_x_y_w_h: Tensor
 ) -> Tensor:
     """
-    TODO
+    Turn batches of several anchors each where every anchor is represented by
+    absolute (x, y, w, h) values, into batches of the same anchors where each
+    anchor is represented by absolute (x1, y1, x2, y2) values - x and y
+    represent respectively the x and y coordinates of the top-left corner, w
+    and y represent respectively the width and height of sides, x1 and y1
+    represent respectively the x and y coordinates of the top-left corner, x2
+    and y2 represent respectively the x and y coordinates of the bottom-right
+    corner.
+    ---
+        Input Shape:
+            - (
+                VARIABLE_N_SAMPLES,
+                N_ANCHORS_PER_IMAGE,
+                1,
+                4
+            )
+    ---
+        Output Shape:
+            - (
+                VARIABLE_N_SAMPLES,
+                N_ANCHORS_PER_IMAGE,
+                1,
+                4
+            )
     """
-    pass
+    batched_anchors_absolute_x1 = batched_anchors_absolute_x_y_w_h[..., 0]
+    # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_y1 = batched_anchors_absolute_x_y_w_h[..., 1]
+    # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_x2 = add(
+        x=batched_anchors_absolute_x_y_w_h[..., 0],
+        y=batched_anchors_absolute_x_y_w_h[..., 2]
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_y2 = add(
+        x=batched_anchors_absolute_x_y_w_h[..., 1],
+        y=batched_anchors_absolute_x_y_w_h[..., 3]
+    )  # shape → (samples, anchors_per_image, 1)
+
+    return expand_dims(
+        input=concat(
+            values=(
+                batched_anchors_absolute_x1,
+                batched_anchors_absolute_y1,
+                batched_anchors_absolute_x2,
+                batched_anchors_absolute_y2
+            ),
+            axis=-1
+        ),  # shape → (samples, anchors_per_image, 4)
+        axis=2
+    )  # shape → (samples, anchors_per_image, 1, 4)
 
 
 def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
@@ -266,30 +318,8 @@ def get_bounding_boxes_from_model_outputs(
             ),
             axis = -1
         )  # shape → (samples, boxes, 5)
-        # --------------------------------------------------------------------
-        # post_processed_bounding_boxes = generate_bounding_box_proposals(
-        #     scores=model_outputs[..., 0],
-        #     bbox_deltas=model_outputs[..., 1:],  # TODO
-        #     # image_info=, TODO
-        #     # NOTE: in my approach, anchors are just used to create labels as
-        #     # relative aspect ratios, neither to recreate predictions nor as
-        #     # absolute sizes - that's why here anchors are passed all with dummy
-        #     # values representing unitary multiplication factors that produce no
-        #     # changes in size:
-        #     anchors=([[1] * N_OUTPUTS_PER_ANCHOR] * N_ANCHORS_PER_CELL),
-        #     nms_threshold=0.7,
-        #     # all anchor's outputs are considered for NMS:
-        #     pre_nms_topn=N_ANCHORS_PER_IMAGE,
-        #     # NOTE: minimum bounding box size set according to dataset inspection
-        #     # results - adding a tolerance threshold as an assumption that
-        #     # slightly smaller bounding boxes can be observed:
-        #     min_size=int(
-        #         min(MINIMUM_BOUNDING_BOX_HEIGHT, MINIMUM_BOUNDING_BOX_WIDTH) *
-        #         MINIMUM_BOUNDING_BOX_SIDE_DIMENSION_TOLERANCE
-        #     ),
-        #     post_nms_topn=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS
-        # )
-        # --------------------------------------------------------------------
+
+    # TODO: discretize x, y, w and h to closest ints: tf.round()
 
     raise bounding_boxes_scores_plus_absolute_x_y_w_h
 
