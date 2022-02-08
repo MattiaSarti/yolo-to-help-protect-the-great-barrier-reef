@@ -3,7 +3,7 @@ Utilities for inference time, for converting model outputs to bounding boxes' pr
 """
 
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 # pylint: disable=import-error
 from tensorflow import (
@@ -23,7 +23,6 @@ from tensorflow import (
 from tensorflow.image import combined_non_max_suppression
 from tensorflow.math import (
     add,
-    greater_equal,
     round as tf_round,
     subtract,
     multiply
@@ -36,7 +35,6 @@ if __name__ != 'main_by_mattia':
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
         N_ANCHORS_PER_CELL,
-        N_ANCHORS_PER_IMAGE,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CORNERS_XY_COORDS,
         OUTPUT_GRID_CELL_N_COLUMNS,
@@ -250,25 +248,75 @@ def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
 
 
 def convert_bounding_boxes_to_submission_format(
-        bounding_boxes: Tensor
-) -> str:
+        batched_bounding_boxes: Tensor,
+        batched_n_valid_bounding_boxes: Tensor,
+        predicting_online: bool = True
+) -> Union[str, List[str]]:
     """
     TODO
+    ---
+        Input Shapes:
+            - (
+                VARIABLE_N_SAMPLES,
+                VARIABLE_N_BOUNDING_BOXES,
+                N_OUTPUTS_PER_ANCHOR
+            )
+            - (
+                VARIABLE_N_SAMPLES,
+            )
     """
-    raise NotImplementedError
+    print(batched_bounding_boxes.shape)
+    print(batched_n_valid_bounding_boxes.shape)
+    # if the batched inputs represent a single sample:
+    if predicting_online:
+        # NOTE: this automatically asserts that the mini-batch contains only a
+        # single sample:
+        n_valid_image_bounding_boxes = int(batched_n_valid_bounding_boxes)
+
+        if n_valid_image_bounding_boxes == 0:
+            return ''
+
+        image_bounding_boxes = squeeze(
+            input=batched_bounding_boxes,
+            axis=0
+        ).numpy().tolist()
+
+        converted_bounding_boxes = ''
+        for index, bounding_box_attributes in enumerate(
+                image_bounding_boxes[:n_valid_image_bounding_boxes]
+        ):
+            if index != 0:
+                converted_bounding_boxes += ' '
+            converted_bounding_boxes += (
+                '{confidence} {x} {y} {width} {height}'.format(
+                    confidence=bounding_box_attributes[0],
+                    x=bounding_box_attributes[1],
+                    y=bounding_box_attributes[2],
+                    width=bounding_box_attributes[3],
+                    height=bounding_box_attributes[4]
+                )
+            )
+
+        return converted_bounding_boxes
+
+    else:
+            # for image_bounding_boxes, n_valid_image_bounding_boxes in \
+            #     batched_bounding_boxes.shape[0]:
+        raise NotImplementedError
 
 
 def get_bounding_boxes_from_model_outputs(
         model_outputs: Tensor,
         from_labels: bool = False
-) -> Tensor:
+) -> Tuple[Tensor, Tensor]:
     """
     Post-process model outputs by applying format conversion, un-normalization
     and reconstruction, and also non-maximum suppression in case the inputs do
     not intended as labels but as predictions, to turn batched model outputs
     into batches of bounding boxes expressed as (score, x, y, w, h), where x,
     y, w, and h respectively represent the top-lect corner absolute x and y
-    coordinates and the absolute width and height.
+    coordinates and the absolute width and height, all in pixels - thus as
+    (positive or null) integers.
 
     NOTE: in my approach, anchors are just used to create labels as relative
     aspect ratios, neither to recreate predictions nor as absolute sizes -
@@ -281,6 +329,16 @@ def get_bounding_boxes_from_model_outputs(
                 OUTPUT_GRID_N_COLUMNS,
                 N_ANCHORS_PER_CELL,
                 N_OUTPUTS_PER_ANCHOR
+            )
+    ---
+        Output Shapes:
+            - (
+                VARIABLE_N_SAMPLES,
+                VARIABLE_N_BOUNDING_BOXES,
+                N_OUTPUTS_PER_ANCHOR
+            )
+            - (
+                VARIABLE_N_SAMPLES,
             )
     """
     n_mini_batch_samples = model_outputs.shape[0]
@@ -347,17 +405,14 @@ def get_bounding_boxes_from_model_outputs(
     (
         boxes_absolute_x1_y1_x2_y2,  # shape → (samples, boxes, 4)
         boxes_scores,  # shape → (samples, boxes)
-        _,  # class for each sample
-        _  # number of detections for each sample
+        _,  # classes of boxes for each sample, not relevant here
+        n_valid_bounding_boxes  # shape → (samples,)
     ) = combined_non_max_suppression(
         boxes=anchors_absolute_x1_y1_x2_y2,
         scores=anchors_scores,
         # NOTE: a single class in considered in the task of interest:
         max_output_size_per_class=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
-        max_total_size=(
-            MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS if not from_labels
-            else N_ANCHORS_PER_IMAGE
-        ),
+        max_total_size=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
         iou_threshold=(
             IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION if not from_labels
             else 1.0
@@ -382,9 +437,14 @@ def get_bounding_boxes_from_model_outputs(
             # shape → (samples, boxes, 4)
         ),
         axis = -1
-    )  # shape → (samples, boxes, 5)
+    )  # shape → (samples, boxes, attributes)
 
-    return bounding_boxes_scores_plus_absolute_x_y_w_h
+    return (
+        bounding_boxes_scores_plus_absolute_x_y_w_h,
+        # shape → (samples, boxes, attributes)
+        n_valid_bounding_boxes
+        # shape → (samples,)
+    )
 
 
 if __name__ == '__main__':
@@ -397,14 +457,84 @@ if __name__ == '__main__':
     model = YOLOv3Variant()
 
     for samples_and_labels in training_samples_and_labels:
-        _ = get_bounding_boxes_from_model_outputs(
+        print('\n' + '-'*90)
+
+        (
+            expected_bounding_boxes,
+            n_valid_expected_bounding_boxes
+        ) = get_bounding_boxes_from_model_outputs(
             model_outputs=samples_and_labels[1],
             from_labels=True
+        )
+        print(
+            expected_bounding_boxes.shape,
+            '-',
+            n_valid_expected_bounding_boxes.shape
         )
 
         predictions = model(samples_and_labels[0])
 
-        _ = get_bounding_boxes_from_model_outputs(
+        (
+            inferred_bounding_boxes,
+            n_valid_inferred_bounding_boxes
+        ) = get_bounding_boxes_from_model_outputs(
             model_outputs=predictions,
             from_labels=False
         )
+        print(
+            inferred_bounding_boxes.shape,
+            '-',
+            n_valid_inferred_bounding_boxes.shape
+        )
+
+        break
+
+    print('\n' + '_'*120)
+
+    training_samples_and_labels = (
+        training_samples_and_labels.unbatch().batch(1)
+    )
+    for samples_and_labels in training_samples_and_labels:
+        print('\n' + '-'*90)
+
+        (
+            expected_bounding_boxes,
+            n_valid_expected_bounding_boxes
+        ) = get_bounding_boxes_from_model_outputs(
+            model_outputs=samples_and_labels[1],
+            from_labels=True
+        )
+        print(
+            expected_bounding_boxes.shape,
+            '-',
+            n_valid_expected_bounding_boxes.shape
+        )
+        print(
+            convert_bounding_boxes_to_submission_format(
+                batched_bounding_boxes=expected_bounding_boxes,
+                batched_n_valid_bounding_boxes=n_valid_expected_bounding_boxes
+            )
+        )
+
+        predictions = model(samples_and_labels[0])
+
+        (
+            inferred_bounding_boxes,
+            n_valid_inferred_bounding_boxes
+        ) = get_bounding_boxes_from_model_outputs(
+            model_outputs=predictions,
+            from_labels=False
+        )
+        print(
+            inferred_bounding_boxes.shape,
+            '-',
+            n_valid_inferred_bounding_boxes.shape
+        )
+        print(
+            convert_bounding_boxes_to_submission_format(
+                batched_bounding_boxes=inferred_bounding_boxes,
+                batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
+            )
+        )
+
+        break  # FIXME: too few & not un-normalized

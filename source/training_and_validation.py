@@ -12,6 +12,10 @@ from tensorflow.keras.optimizers import Adam
 # pylint: enable=import-error
 
 if __name__ != 'main_by_mattia':
+    from inference import (
+        convert_bounding_boxes_to_submission_format,
+        get_bounding_boxes_from_model_outputs
+    )
     from loss_and_metrics import (
         iou_threshold_averaged_f2_score, yolov3_variant_loss
     )
