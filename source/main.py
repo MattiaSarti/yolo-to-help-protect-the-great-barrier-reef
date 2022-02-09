@@ -15,7 +15,7 @@ from tensorflow.random import set_seed
 if __name__ != 'main_by_mattia':
     from common_constants import DATA_TYPE_FOR_INPUTS
     from inference import (
-        convert_bounding_boxes_to_final_format,
+        convert_batched_bounding_boxes_to_final_format,
         get_bounding_boxes_from_model_outputs
     )
     from model_architecture import YOLOv3Variant
@@ -54,19 +54,23 @@ def infer_on_test_set_and_submit(trained_model_instance: Model) -> None:
 
     for (pixel_array, sample_prediction_df) in iter_test:
         sample_prediction_df['annotations'] = (  # make your predictions here
-            convert_bounding_boxes_to_final_format(
-                get_bounding_boxes_from_model_outputs(
-                    model_outputs=trained_model_instance(
-                        expand_dims(
-                            input=convert_to_tensor(
-                                value=pixel_array,
-                                dtype=DATA_TYPE_FOR_INPUTS
-                            ),
-                            axis=0
-                        )
-                    ),
-                    from_labels=False
-                )
+            convert_batched_bounding_boxes_to_final_format(
+                *(
+                    get_bounding_boxes_from_model_outputs(
+                        model_outputs=trained_model_instance(
+                            expand_dims(
+                                input=convert_to_tensor(
+                                    value=pixel_array,
+                                    dtype=DATA_TYPE_FOR_INPUTS
+                                ),
+                                axis=0
+                            )
+                        ),
+                        from_labels=False
+                    )
+                ),
+                predicting_online=True,
+                as_strings=True
             )
         )
         env.predict(sample_prediction_df)   # register your predictions

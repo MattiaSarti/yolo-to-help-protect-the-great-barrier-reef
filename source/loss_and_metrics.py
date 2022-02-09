@@ -1,12 +1,42 @@
 """
 Definitions of the employed loss function and metrics.
+
+NOTE on the employed metric, citing the competition explanation:
+------------------------------------------------------------------------------
+"This competition is evaluated on the F2 Score at different intersection over
+union (IoU) thresholds. The F2 metric weights recall more heavily than
+precision, as in this case it makes sense to tolerate some false positives
+in order to ensure very few starfish are missed.
+
+The metric sweeps over IoU thresholds in the range of 0.3 to 0.8 with a step
+size of 0.05, calculating an F2 score at each threshold. For example, at a
+threshold of 0.5, a predicted object is considered a "hit" if its IoU with a
+ground truth object is at least 0.5.
+
+A true positive is the first (in confidence order, see details below)
+submission box in a sample with an IoU greater than the threshold against an
+unmatched solution box.
+
+Once all submission boxes have been evaluated, any unmatched submission boxes
+are false positives; any unmatched solution boxes are false negatives.
+
+The final F2 Score is calculated as the mean of the F2 scores at each IoU
+threshold. Within each IoU threshold the competition metric uses micro
+averaging; every true positive, false positive, and false negative has equal
+weight compared to each other true positive, false positive, and false
+negative.
+
+In your submission, you are also asked to provide a confidence level for each
+bounding box. Bounding boxes are evaluated in order of their confidence
+levels. This means that bounding boxes with higher confidence will be checked
+first for matches against solutions, which determines what boxes are
+considered true and false positives."
+------------------------------------------------------------------------------
 """
 
 
-from tkinter import Y
 from typing import List, Tuple
 
-from numpy import arange, ndarray
 # pylint: disable=import-error
 from tensorflow import (
     expand_dims,
@@ -29,7 +59,6 @@ from tensorflow.math import (
 
 if __name__ != 'main_by_mattia':
     from common_constants import (
-        DATA_TYPE_FOR_OUTPUTS,
         LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS,
         LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
         OUTPUT_GRID_N_ROWS,
@@ -38,7 +67,8 @@ if __name__ != 'main_by_mattia':
         N_OUTPUTS_PER_ANCHOR
     )
     from inference import (
-        get_bounding_boxes_from_model_outputs
+        get_bounding_boxes_from_model_outputs,
+        convert_batched_bounding_boxes_to_final_format
     )
     from samples_and_labels import (
         MINI_BATCH_SIZE
@@ -56,19 +86,131 @@ LABELS_FULL_SHAPE = (
 )
 
 
-def evaluate_bounding_boxes_matching(
-        expected_bounding_boxes: Tensor,
-        predicted_bounding_boxes: Tensor,
-        iou_threshold: float
-) -> Tuple[Tensor, Tensor, Tensor]:
+def compute_intersection_over_union(
+        x_y_w_h_first_box: Tuple[int, int, int, int],
+        x_y_w_h_second_box: Tuple[int, int, int, int]
+) -> float:
     """
-    TODO
+    Compute the intersection over union (IoU) between two boxes represented
+    by the two integer sets of {top-left corner x coordinate, top-left corner
+    y coordinate, box width, box height} given as inputs.
     """
-    return (
-        false_positives,
-        false_negatives,
-        true_positives
+    # boxes intersection area:
+    boxes_intersection_area = (
+        (  # x-side intersection length:
+            max(
+                (
+                    min(
+                        x_y_w_h_first_box[0] + x_y_w_h_first_box[2],
+                        x_y_w_h_second_box[0] + x_y_w_h_second_box[2]
+                    ) - max(
+                        x_y_w_h_first_box[0],
+                        x_y_w_h_second_box[0]
+                    )
+                ),
+                0
+            )
+        ) * (  # y-side intersection length:
+            max(
+                (
+                    min(
+                        x_y_w_h_first_box[1] + x_y_w_h_first_box[3],
+                        x_y_w_h_second_box[1] + x_y_w_h_second_box[3]
+                    ) - max(
+                        x_y_w_h_first_box[1],
+                        x_y_w_h_second_box[1]
+                    )
+                ),
+                0
+            )
+        )
     )
+
+    return (
+        boxes_intersection_area / (  # boxes union area:
+            (x_y_w_h_first_box[2] * x_y_w_h_first_box[3])  # 1st box area:
+            + (x_y_w_h_second_box[2] * x_y_w_h_second_box[3])  # 2nd box area
+            - boxes_intersection_area
+        )
+    )
+
+
+def compute_mean_f2_scores(
+        images_matches: List[Tuple[float, float, float]]
+) -> float:
+    """
+    Return the F2-scores of each mini-batch sample, given their numbers of
+    false positives, false negatives and true positives as inputs.
+    """
+    cumulative_f2_score = 0
+    number_of_f2_scores_summed = 0
+    for true_positives, false_positives, false_negatives in images_matches:
+        number_of_f2_scores_summed += 1
+        cumulative_f2_score += (
+            true_positives / (
+                true_positives + 0.8*false_negatives + 0.2*false_positives
+                + EPSILON
+            )
+        )
+    return (cumulative_f2_score / number_of_f2_scores_summed)
+
+
+def evaluate_batched_bounding_boxes_matching(
+        expected_bounding_boxes: List[Tuple[float, int, int, int, int]],
+        predicted_bounding_boxes: List[Tuple[float, int, int, int, int]],
+        iou_threshold: float
+) -> List[Tuple[int, int, int]]:
+    """
+    Retun the true positives, false positives, false negatives - according to
+    the competition metric definition - for each pair of arrays of predicted
+    vs expected bounding boxes in the batched inputs.
+    """
+    matches = []
+    for image_expected_bounding_boxes, image_predicted_bounding_boxes in zip(
+            expected_bounding_boxes, predicted_bounding_boxes
+    ):
+        # sorting the predicted bounding boxes of the considered image by
+        # relevance according to the predicted confidence score:
+        best_to_worst_predicted_bounding_boxes = sorted(
+            image_predicted_bounding_boxes,
+            key=lambda bounding_box_attributes: bounding_box_attributes[0],
+            reverse=True
+        )
+        # NOTE: the expected bounding boxes are equally important, no sorting
+        # is required
+
+        true_positives = 0
+        false_positives = 0
+
+        for predicted_bounding_box in best_to_worst_predicted_bounding_boxes:
+            current_bounding_box_matched = True
+
+            for index, expected_bounding_box in enumerate(
+                    image_expected_bounding_boxes
+            ):
+                if (
+                        compute_intersection_over_union(
+                            x_y_w_h_first_box=predicted_bounding_box[1:],
+                            x_y_w_h_second_box=expected_bounding_box[1:]
+                        ) >= iou_threshold
+                ):
+                    current_bounding_box_matched = True
+                    image_expected_bounding_boxes.remove(index)
+                    true_positives += 1
+                    break
+
+            if not current_bounding_box_matched:
+                false_positives += 1
+        
+        false_negatives = len(image_expected_bounding_boxes)
+
+        matches.append(
+            true_positives,
+            false_positives,
+            false_negatives
+        )
+
+    return matches
 
 
 def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
@@ -82,41 +224,48 @@ def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
     # turning the labels representing model outputs into bounding boxes,
     # following the same format that the predictions assume at inference time,
     # when they undergo an additional post-processing, unlike during training:
-    labels_as_bounding_boxes = get_bounding_boxes_from_model_outputs(
+    (
+        labels_bounding_boxes, labels_n_valid_bounding_boxes
+    ) = get_bounding_boxes_from_model_outputs(
         model_outputs=y_true,
         from_labels=True
+    )
+    (
+        predictions_bounding_boxes, predictions_n_valid_bounding_boxes
+    ) = get_bounding_boxes_from_model_outputs(
+        model_outputs=y_pred,
+        from_labels=False
+    )
+
+    labels_as_lists_of_bounding_boxes = (
+        convert_batched_bounding_boxes_to_final_format(
+            batched_bounding_boxes=labels_bounding_boxes,
+            batched_n_valid_bounding_boxes=labels_n_valid_bounding_boxes,
+            predicting_online=False,
+            as_strings=False
+        )
+    )
+    predictions_as_lists_of_bounding_boxes = (
+        convert_batched_bounding_boxes_to_final_format(
+            batched_bounding_boxes=predictions_bounding_boxes,
+            batched_n_valid_bounding_boxes=predictions_n_valid_bounding_boxes,
+            predicting_online=False,
+            as_strings=False
+        )
     )
 
     mean_f2_scores_for_different_iou_thresholds = []
 
     for threshold in IOU_THRESHOLDS:
-        (
-            false_positives,
-            false_negatives,
-            true_positives
-        ) = evaluate_bounding_boxes_matching(
-            expected_bounding_boxes=labels_as_bounding_boxes,
-            predicted_bounding_boxes=y_pred,
-            iou_threshold=threshold
-        )
-
         mean_f2_scores_for_different_iou_thresholds.append(
-            # ----------------------------------------------------------------
-            # convert_to_tensor(
-            #     value=[
-            #         mean_f2_scores(
-            #             false_positives=false_positives,
-            #             false_negatives=false_negatives,
-            #             true_positives=true_positives
-            #         )
-            #     ],
-            #     dtype=DATA_TYPE_FOR_OUTPUTS
-            # )
-            # ----------------------------------------------------------------
-            mean_f2_scores(
-                false_positives=false_positives,
-                false_negatives=false_negatives,
-                true_positives=true_positives
+            compute_mean_f2_scores(
+                images_matches=evaluate_batched_bounding_boxes_matching(
+                    expected_bounding_boxes=labels_as_lists_of_bounding_boxes,
+                    predicted_bounding_boxes=(
+                        predictions_as_lists_of_bounding_boxes
+                    ),
+                    iou_threshold=threshold
+                )
             )
         )
 
@@ -126,22 +275,6 @@ def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
             axis=-1
         ),
         axis=-1
-    )
-
-
-def mean_f2_scores(
-        false_positives: Tensor,
-        false_negatives: Tensor,
-        true_positives: Tensor
-) -> Tensor:
-    """
-    Return the F2-scores of each mini-batch sample, given their numbers of
-    false positives, false negatives and true positives as inputs.
-    """
-    # FIXME: vectorize considering batches and with TF
-    return (
-        true_positives /
-        (true_positives + 0.8*false_negatives + 0.2*false_positives + EPSILON)
     )
 
 

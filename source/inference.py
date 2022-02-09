@@ -278,11 +278,15 @@ def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
     )  # shape → (samples, boxes, 4)
 
 
-def convert_bounding_boxes_to_final_format(
+def convert_batched_bounding_boxes_to_final_format(
         batched_bounding_boxes: Tensor,
         batched_n_valid_bounding_boxes: Tensor,
-        predicting_online: bool = True
-) -> Union[str, List[str]]:
+        predicting_online: bool = True,
+        as_strings: bool = True
+) -> Union[
+        Union[str, Tuple[float, int, int, int, int]],
+        List[Union[str, Tuple[float, int, int, int, int]]]
+]:
     """
     TODO
      - eventually discretizing all absolute coordinates' values to
@@ -304,29 +308,53 @@ def convert_bounding_boxes_to_final_format(
         # only a single sample:
         n_valid_image_bounding_boxes = int(batched_n_valid_bounding_boxes)
 
-        if n_valid_image_bounding_boxes == 0:
-            return ''
+        return convert_bounding_boxes_to_final_format(
+            image_bounding_boxes=squeeze(
+                input=batched_bounding_boxes,
+                axis=0
+            ),
+            n_valid_bounding_boxes=n_valid_image_bounding_boxes,
+            as_string=as_strings
+        )
 
-        image_bounding_boxes = squeeze(
-            input=batched_bounding_boxes,
-            axis=0
-        ).numpy().tolist()[:n_valid_image_bounding_boxes]
+    # if the batched inputs contain more than a single sample:
+    else:
+        batch_of_converted_bounding_boxes = []
 
-        # --------------------------------------------------------------------
-        # cast(
-        #     # NOTE: rounding is carried out before discretizing so as to
-        #     # avoid any truncation due to casting
-        #     x=tf_round(
-        #         x=...
-        #     ),  # shape → (samples, boxes, 4)
-        #     dtype=DATA_TYPE_FOR_INPUTS
-        # )  # shape → (samples, boxes, 4)
-        # --------------------------------------------------------------------
-
-        converted_bounding_boxes = ''
-        for index, bounding_box_attributes in enumerate(
-                image_bounding_boxes
+        for current_image_bounding_boxes, n_valid_image_bounding_boxes in zip(
+                batched_bounding_boxes, batched_n_valid_bounding_boxes
         ):
+            batch_of_converted_bounding_boxes.append(
+                convert_bounding_boxes_to_final_format(
+                    image_bounding_boxes=current_image_bounding_boxes,
+                    n_valid_bounding_boxes=n_valid_image_bounding_boxes,
+                    as_string=as_strings
+                )
+            )
+
+        return batch_of_converted_bounding_boxes
+
+
+def convert_bounding_boxes_to_final_format(
+        image_bounding_boxes: Tensor,
+        n_valid_bounding_boxes: int,
+        as_string: bool = True
+) -> Union[str, Tuple[float, int, int, int, int]]:
+    """
+    TODO
+    """
+    if n_valid_bounding_boxes == 0:
+        return '' if as_string else []
+    
+    image_bounding_boxes = (
+        image_bounding_boxes.numpy().tolist()[:n_valid_bounding_boxes]
+    )
+
+    converted_bounding_boxes = '' if as_string else []
+    for index, bounding_box_attributes in enumerate(
+            image_bounding_boxes
+    ):
+        if as_string:
             if index != 0:
                 converted_bounding_boxes += ' '
             converted_bounding_boxes += (
@@ -338,13 +366,18 @@ def convert_bounding_boxes_to_final_format(
                     height=round(bounding_box_attributes[4])
                 )
             )
+        else:
+            converted_bounding_boxes.append(
+                [
+                    bounding_box_attributes[0],
+                    round(bounding_box_attributes[1]),
+                    round(bounding_box_attributes[2]),
+                    round(bounding_box_attributes[3]),
+                    round(bounding_box_attributes[4]),
+                ]
+            )
 
-        return converted_bounding_boxes
-
-    else:
-            # for image_bounding_boxes, n_valid_image_bounding_boxes in \
-            #     batched_bounding_boxes.shape[0]:
-        raise NotImplementedError
+    return converted_bounding_boxes
 
 
 def get_bounding_boxes_from_model_outputs(
@@ -554,9 +587,11 @@ if __name__ == '__main__':
             n_valid_expected_bounding_boxes.shape
         )
 
-        submissions = convert_bounding_boxes_to_final_format(
+        submissions = convert_batched_bounding_boxes_to_final_format(
             batched_bounding_boxes=expected_bounding_boxes,
-            batched_n_valid_bounding_boxes=n_valid_expected_bounding_boxes
+            batched_n_valid_bounding_boxes=n_valid_expected_bounding_boxes,
+            predicting_online=True,
+            as_strings=True
         )
         print(submissions)
 
@@ -575,9 +610,11 @@ if __name__ == '__main__':
             n_valid_inferred_bounding_boxes.shape
         )
 
-        submissions = convert_bounding_boxes_to_final_format(
+        submissions = convert_batched_bounding_boxes_to_final_format(
             batched_bounding_boxes=inferred_bounding_boxes,
-            batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
+            batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes,
+            predicting_online=True,
+            as_strings=True
         )
         print(submissions)
 
