@@ -22,7 +22,7 @@
 - [x] loss function
 - [ ] loss function weighting to favor the competition metric
 - [x] post-processing (model outputs → predictions of boundinx boxes)
-- [ ] competition metric
+- [x] competition metric
 - [x] test set inference
 - [x] fix determinism for reproducibility
 - [ ] checkpoint averaging
