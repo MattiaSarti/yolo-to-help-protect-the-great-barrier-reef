@@ -947,6 +947,15 @@ def turn_bounding_boxes_to_model_outputs(
 
     # for each bounding box in the image:
     for bounding_box in raw_bounding_boxes:
+        # computing the absolute x and y coordinates of the bounding box
+        # center:
+        bounging_box_center_absolute_x_coord = (
+            bounding_box['x'] + (bounding_box['width'] / 2)
+        )
+        bounging_box_center_absolute_y_coord = (
+            bounding_box['y'] + (bounding_box['height'] / 2)
+        )
+
         # getting the required information about the grid cell that contains
         # its center:
         (
@@ -956,18 +965,22 @@ def turn_bounding_boxes_to_model_outputs(
             cell_corner_y_coord
         ) = get_cell_containing_bounding_box_center(
             center_absolute_x_and_y_coords=(
-                bounding_box['x'] + (bounding_box['width'] / 2),
-                bounding_box['y'] + (bounding_box['height'] / 2)
+                bounging_box_center_absolute_x_coord,
+                bounging_box_center_absolute_y_coord
             )
         )
 
-        # normalizing the boundinx box coordinates:
+        # transforming and normalizing the bounding box coordinates, now
+        # meaning respectively for x and y the relative center offset from the
+        # encoling cell top-left corner normalized to the grid cell size and
+        # for width and height the relative heights and heights with respect
+        # to the image sides:
         relative_x_coord = (
-            (bounding_box['x'] - cell_corner_x_coord) /
+            (bounging_box_center_absolute_x_coord - cell_corner_x_coord) /
             OUTPUT_GRID_CELL_N_COLUMNS
         )
         relative_y_coord = (
-            bounding_box['y'] - cell_corner_y_coord /
+            (bounging_box_center_absolute_y_coord - cell_corner_y_coord) /
             OUTPUT_GRID_CELL_N_ROWS
         )
         relative_width = bounding_box['width'] / IMAGE_N_COLUMNS
@@ -1029,6 +1042,21 @@ if __name__ == '__main__':
         # not shuffling when needing adjacent frames for showing the movie:
         shuffle=(not SHOW_DATASET_MOVIES)
     )
+
+    samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs(
+        # not shuffling when needing adjacent frames for showing the movie:
+        shuffle=False
+    )
+    for i, j in enumerate(samples_n_bounding_boxes_dataset):
+        if j[1].numpy().tolist() == [[559., 213., 50., 32.]]:
+            print(j[1])
+            print('i =', i)
+            break
+    for ii, j in enumerate(samples_n_model_outputs_dataset):
+        if ii == i:
+            output = j[1]
+            import pdb; pdb.set_trace()
+            break
 
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
