@@ -10,8 +10,5 @@ __pycache__/
 # credentials for my Kaggle account:
 /kaggle/kaggle.json
 
-# dataset paper:
-/The CSIRO Crown-of-Thorn Starfish Detection Dataset.pdf
-
-# YOLOv3 paper:
-/YOLOv3 - An Incremental Improvement.pdf
+# papers:
+/papers/
