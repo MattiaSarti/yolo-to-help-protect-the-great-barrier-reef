@@ -244,13 +244,13 @@ def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
     # shape → (samples, boxes)
 
     batched_anchors_absolute_w = subtract(
-        y=batched_anchors_absolute_x1_y1_x2_y2[..., 2],
-        x=batched_anchors_absolute_x1_y1_x2_y2[..., 0]
+        x=batched_anchors_absolute_x1_y1_x2_y2[..., 2],
+        y=batched_anchors_absolute_x1_y1_x2_y2[..., 0]
     )  # shape → (samples, boxes)
 
     batched_anchors_absolute_h = subtract(
-        y=batched_anchors_absolute_x1_y1_x2_y2[..., 3],
-        x=batched_anchors_absolute_x1_y1_x2_y2[..., 1]
+        x=batched_anchors_absolute_x1_y1_x2_y2[..., 3],
+        y=batched_anchors_absolute_x1_y1_x2_y2[..., 1]
     )  # shape → (samples, boxes)
 
     return stack(
