@@ -443,11 +443,11 @@ def get_bounding_boxes_from_model_outputs(
         max_total_size=MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS,
         iou_threshold=(
             IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION if not from_labels
-            else 1.0
+            else 0
         ),
         score_threshold=(
             SCORE_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION if not from_labels
-            else 1.0
+            else (1 - 1e-6)
         ),
         pad_per_class=False,
         clip_boxes=False
@@ -479,7 +479,9 @@ if __name__ == '__main__':
     (
         training_samples_and_labels, validation_samples_and_labels
     ) = split_dataset_into_batched_training_and_validation_sets(
-        training_plus_validation_set=dataset_of_samples_and_model_outputs()
+        training_plus_validation_set=dataset_of_samples_and_model_outputs(
+            shuffle=False
+        )
     )
 
     model = YOLOv3Variant()
@@ -544,25 +546,25 @@ if __name__ == '__main__':
         )
         print(submissions)
 
-        predictions = model(samples_and_labels[0])
+        # predictions = model(samples_and_labels[0])
 
-        (
-            inferred_bounding_boxes,
-            n_valid_inferred_bounding_boxes
-        ) = get_bounding_boxes_from_model_outputs(
-            model_outputs=predictions,
-            from_labels=False
-        )
-        print(
-            inferred_bounding_boxes.shape,
-            '-',
-            n_valid_inferred_bounding_boxes.shape
-        )
+        # (
+        #     inferred_bounding_boxes,
+        #     n_valid_inferred_bounding_boxes
+        # ) = get_bounding_boxes_from_model_outputs(
+        #     model_outputs=predictions,
+        #     from_labels=False
+        # )
+        # print(
+        #     inferred_bounding_boxes.shape,
+        #     '-',
+        #     n_valid_inferred_bounding_boxes.shape
+        # )
 
-        submissions = convert_bounding_boxes_to_final_format(
-            batched_bounding_boxes=inferred_bounding_boxes,
-            batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
-        )
-        print(submissions)
+        # submissions = convert_bounding_boxes_to_final_format(
+        #     batched_bounding_boxes=inferred_bounding_boxes,
+        #     batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
+        # )
+        # print(submissions)
 
-        break  # FIXME: not un-normalized
+        # break
