@@ -561,25 +561,25 @@ if __name__ == '__main__':
         )
         print(submissions)
 
-        # predictions = model(samples_and_labels[0])
+        predictions = model(samples_and_labels[0])
 
-        # (
-        #     inferred_bounding_boxes,
-        #     n_valid_inferred_bounding_boxes
-        # ) = get_bounding_boxes_from_model_outputs(
-        #     model_outputs=predictions,
-        #     from_labels=False
-        # )
-        # print(
-        #     inferred_bounding_boxes.shape,
-        #     '-',
-        #     n_valid_inferred_bounding_boxes.shape
-        # )
+        (
+            inferred_bounding_boxes,
+            n_valid_inferred_bounding_boxes
+        ) = get_bounding_boxes_from_model_outputs(
+            model_outputs=predictions,
+            from_labels=False
+        )
+        print(
+            inferred_bounding_boxes.shape,
+            '-',
+            n_valid_inferred_bounding_boxes.shape
+        )
 
-        # submissions = convert_bounding_boxes_to_final_format(
-        #     batched_bounding_boxes=inferred_bounding_boxes,
-        #     batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
-        # )
-        # print(submissions)
+        submissions = convert_bounding_boxes_to_final_format(
+            batched_bounding_boxes=inferred_bounding_boxes,
+            batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
+        )
+        print(submissions)
 
-        # break
+        break
