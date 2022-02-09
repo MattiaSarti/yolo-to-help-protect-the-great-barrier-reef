@@ -21,7 +21,7 @@ from tensorflow import (
 from tensorflow.image import combined_non_max_suppression
 from tensorflow.math import (
     add,
-    round as tf_round,
+    divide,
     subtract,
     multiply
 )
@@ -57,11 +57,14 @@ def batched_anchors_rel_to_real_abs_x_y_w_h(
         batched_anchors_corners_absolute_x_y: Tensor
 ) -> Tensor:
     """
-    Turn batches of several anchors each where every anchor is represented by
-    relative (x, y, w, h) values, into batches of the same anchors where each
-    anchor is represented by absolute (x, y, w, h) values - x and y represent
-    respectively the x and y coordinates of the top-left corner, w and y
-    represent respectively the width and height of sides.
+    Turn batches of arrays of anchors where every anchor is represented by
+    relative (x center, y center, w, h) values into batches of the same
+    anchors where each anchor is represented by absolute (x top-left corner,
+    y top-left corner, w, h) values - x and y represent respectively the x and
+    y coordinates of the center in the inputs and of the top-left corner in
+    the output, w and y represent respectively the width and height of sides.
+    NOTE: this function changes not only the scale but also the meaning of x
+    and y
     ---
         Input Shapes:
             - (
@@ -94,22 +97,6 @@ def batched_anchors_rel_to_real_abs_x_y_w_h(
         dtype=DATA_TYPE_FOR_OUTPUTS
     )  # shape → (samples, anchors_per_image, 1, 2)
 
-    batched_anchors_absolute_x = add(
-        x=multiply(
-            x=batched_anchors_relative_x_y_w_h[..., 0],
-            y=float(OUTPUT_GRID_CELL_N_COLUMNS)
-        ),  # shape → (samples, anchors_per_image, 1)
-        y=expanded_batched_anchors_corners_absolute_x_y[..., 0]
-    )  # shape → (samples, anchors_per_image, 1)
-
-    batched_anchors_absolute_y = add(
-        x=multiply(
-            x=batched_anchors_relative_x_y_w_h[..., 1],
-            y=float(OUTPUT_GRID_CELL_N_ROWS)
-        ),  # shape → (samples, anchors_per_image, 1)
-        y=expanded_batched_anchors_corners_absolute_x_y[..., 1]
-    )  # shape → (samples, anchors_per_image, 1)
-
     batched_anchors_absolute_w = multiply(
         x=batched_anchors_relative_x_y_w_h[..., 2],
         y=IMAGE_N_COLUMNS
@@ -118,6 +105,34 @@ def batched_anchors_rel_to_real_abs_x_y_w_h(
     batched_anchors_absolute_h = multiply(
         x=batched_anchors_relative_x_y_w_h[..., 3],
         y=IMAGE_N_ROWS
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_x = subtract(
+        x=add(
+            x=multiply(
+                x=batched_anchors_relative_x_y_w_h[..., 0],
+                y=float(OUTPUT_GRID_CELL_N_COLUMNS)
+            ),  # shape → (samples, anchors_per_image, 1)
+            y=expanded_batched_anchors_corners_absolute_x_y[..., 0]
+        ),  # shape → (samples, anchors_per_image, 1)
+        y=divide(
+            x=batched_anchors_absolute_w,
+            y=float(2)
+        ),  # shape → (samples, anchors_per_image, 1)
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_y = subtract(
+        x=add(
+            x=multiply(
+                x=batched_anchors_relative_x_y_w_h[..., 1],
+                y=float(OUTPUT_GRID_CELL_N_ROWS)
+            ),  # shape → (samples, anchors_per_image, 1)
+            y=expanded_batched_anchors_corners_absolute_x_y[..., 1]
+        ),  # shape → (samples, anchors_per_image, 1)
+        y=divide(
+            x=batched_anchors_absolute_h,
+            y=float(2)
+        ),  # shape → (samples, anchors_per_image, 1)
     )  # shape → (samples, anchors_per_image, 1)
 
     return expand_dims(
