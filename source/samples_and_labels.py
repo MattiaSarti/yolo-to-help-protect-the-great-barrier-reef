@@ -1043,21 +1043,6 @@ if __name__ == '__main__':
         shuffle=(not SHOW_DATASET_MOVIES)
     )
 
-    samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs(
-        # not shuffling when needing adjacent frames for showing the movie:
-        shuffle=False
-    )
-    for i, j in enumerate(samples_n_bounding_boxes_dataset):
-        if j[1].numpy().tolist() == [[559., 213., 50., 32.]]:
-            print(j[1])
-            print('i =', i)
-            break
-    for ii, j in enumerate(samples_n_model_outputs_dataset):
-        if ii == i:
-            output = j[1]
-            import pdb; pdb.set_trace()
-            break
-
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
             ordered_samples_and_labels=samples_n_model_outputs_dataset,
