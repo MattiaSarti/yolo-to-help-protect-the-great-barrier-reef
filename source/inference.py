@@ -8,17 +8,15 @@ from typing import List, Tuple, Union
 # pylint: disable=import-error
 from tensorflow import (
     cast,
+    clip_by_value,
     concat,
     convert_to_tensor,
     expand_dims,
-    gather_nd,
     reshape,
     squeeze,
     stack,
     Tensor,
-    tile,
-    where,
-    zeros
+    tile
 )
 from tensorflow.image import combined_non_max_suppression
 from tensorflow.math import (
@@ -54,7 +52,7 @@ MAXIMUM_N_BOUNDING_BOXES_AFTER_NMS = 100
 SCORE_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION = 0.5
 
 
-def batched_anchors_rel_to_abs_x_y_w_h(
+def batched_anchors_rel_to_real_abs_x_y_w_h(
         batched_anchors_relative_x_y_w_h: Tensor,
         batched_anchors_corners_absolute_x_y: Tensor
 ) -> Tensor:
@@ -87,6 +85,8 @@ def batched_anchors_rel_to_abs_x_y_w_h(
             )
     """
     expanded_batched_anchors_corners_absolute_x_y = cast(
+        # NOTE: they are already discretized, so any truncation due to casting
+        # is not relevant
         x=expand_dims(
             input=batched_anchors_corners_absolute_x_y,
             axis=2
@@ -145,7 +145,8 @@ def batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
     and y represent respectively the width and height of sides, x1 and y1
     represent respectively the x and y coordinates of the top-left corner, x2
     and y2 represent respectively the x and y coordinates of the bottom-right
-    corner.
+    corner - eventually clipping all output coordinates' values to fall inside
+    the image.
     ---
         Input Shape:
             - (
@@ -163,20 +164,36 @@ def batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
                 4
             )
     """
-    batched_anchors_absolute_x1 = batched_anchors_absolute_x_y_w_h[..., 0]
-    # shape → (samples, anchors_per_image, 1)
-
-    batched_anchors_absolute_y1 = batched_anchors_absolute_x_y_w_h[..., 1]
-    # shape → (samples, anchors_per_image, 1)
-
-    batched_anchors_absolute_x2 = add(
-        x=batched_anchors_absolute_x_y_w_h[..., 0],
-        y=batched_anchors_absolute_x_y_w_h[..., 2]
+    batched_anchors_absolute_x1 = clip_by_value(
+        t=batched_anchors_absolute_x_y_w_h[..., 0],
+        # shape → (samples, anchors_per_image, 1)
+        clip_value_min=0,
+        clip_value_max=(IMAGE_N_COLUMNS - 1)
     )  # shape → (samples, anchors_per_image, 1)
 
-    batched_anchors_absolute_y2 = add(
-        x=batched_anchors_absolute_x_y_w_h[..., 1],
-        y=batched_anchors_absolute_x_y_w_h[..., 3]
+    batched_anchors_absolute_y1 = clip_by_value(
+        t=batched_anchors_absolute_x_y_w_h[..., 1],
+        # shape → (samples, anchors_per_image, 1)
+        clip_value_min=0,
+        clip_value_max=(IMAGE_N_ROWS - 1)
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_x2 = clip_by_value(
+        t=add(
+            x=batched_anchors_absolute_x_y_w_h[..., 0],
+            y=batched_anchors_absolute_x_y_w_h[..., 2]
+        ),  # shape → (samples, anchors_per_image, 1)
+        clip_value_min=0,
+        clip_value_max=(IMAGE_N_COLUMNS - 1)
+    )  # shape → (samples, anchors_per_image, 1)
+
+    batched_anchors_absolute_y2 = clip_by_value(
+        t=add(
+            x=batched_anchors_absolute_x_y_w_h[..., 1],
+            y=batched_anchors_absolute_x_y_w_h[..., 3]
+        ),  # shape → (samples, anchors_per_image, 1)
+        clip_value_min=0,
+        clip_value_max=(IMAGE_N_ROWS - 1)
     )  # shape → (samples, anchors_per_image, 1)
 
     return expand_dims(
@@ -247,13 +264,15 @@ def batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
     )  # shape → (samples, boxes, 4)
 
 
-def convert_bounding_boxes_to_submission_format(
+def convert_bounding_boxes_to_final_format(
         batched_bounding_boxes: Tensor,
         batched_n_valid_bounding_boxes: Tensor,
         predicting_online: bool = True
 ) -> Union[str, List[str]]:
     """
     TODO
+     - eventually discretizing all absolute coordinates' values to
+    respect the physical constrant of representing image pixels
     ---
         Input Shapes:
             - (
@@ -265,12 +284,10 @@ def convert_bounding_boxes_to_submission_format(
                 VARIABLE_N_SAMPLES,
             )
     """
-    print(batched_bounding_boxes.shape)
-    print(batched_n_valid_bounding_boxes.shape)
     # if the batched inputs represent a single sample:
     if predicting_online:
-        # NOTE: this automatically asserts that the mini-batch contains only a
-        # single sample:
+        # NOTE: this also automatically asserts that the mini-batch contains
+        # only a single sample:
         n_valid_image_bounding_boxes = int(batched_n_valid_bounding_boxes)
 
         if n_valid_image_bounding_boxes == 0:
@@ -279,21 +296,32 @@ def convert_bounding_boxes_to_submission_format(
         image_bounding_boxes = squeeze(
             input=batched_bounding_boxes,
             axis=0
-        ).numpy().tolist()
+        ).numpy().tolist()[:n_valid_image_bounding_boxes]
+
+        # --------------------------------------------------------------------
+        # cast(
+        #     # NOTE: rounding is carried out before discretizing so as to
+        #     # avoid any truncation due to casting
+        #     x=tf_round(
+        #         x=...
+        #     ),  # shape → (samples, boxes, 4)
+        #     dtype=DATA_TYPE_FOR_INPUTS
+        # )  # shape → (samples, boxes, 4)
+        # --------------------------------------------------------------------
 
         converted_bounding_boxes = ''
         for index, bounding_box_attributes in enumerate(
-                image_bounding_boxes[:n_valid_image_bounding_boxes]
+                image_bounding_boxes
         ):
             if index != 0:
                 converted_bounding_boxes += ' '
             converted_bounding_boxes += (
                 '{confidence} {x} {y} {width} {height}'.format(
                     confidence=bounding_box_attributes[0],
-                    x=bounding_box_attributes[1],
-                    y=bounding_box_attributes[2],
-                    width=bounding_box_attributes[3],
-                    height=bounding_box_attributes[4]
+                    x=round(bounding_box_attributes[1]),
+                    y=round(bounding_box_attributes[2]),
+                    width=round(bounding_box_attributes[3]),
+                    height=round(bounding_box_attributes[4])
                 )
             )
 
@@ -393,7 +421,7 @@ def get_bounding_boxes_from_model_outputs(
     anchors_relative_x_y_w_h = anchors_outputs[..., 1:]
     # shape → (samples, anchors_per_image, 1, 4)
 
-    anchors_absolute_x_y_w_h = batched_anchors_rel_to_abs_x_y_w_h(
+    anchors_absolute_x_y_w_h = batched_anchors_rel_to_real_abs_x_y_w_h(
         batched_anchors_relative_x_y_w_h=anchors_relative_x_y_w_h,
         batched_anchors_corners_absolute_x_y=anchors_corners_absolute_x_y
     )  # shape → (samples, anchors_per_image, 1, 4)
@@ -422,7 +450,7 @@ def get_bounding_boxes_from_model_outputs(
             else 1.0
         ),
         pad_per_class=False,
-        clip_boxes=(True if not from_labels else False)
+        clip_boxes=False
     )
 
     boxes_absolute_x_y_w_h = batched_anchors_x1_y1_x2_y2_to_x_y_w_h(
@@ -433,7 +461,7 @@ def get_bounding_boxes_from_model_outputs(
         values=(
             expand_dims(input=boxes_scores, axis=-1),
             # shape → (samples, boxes, 1)
-            tf_round(x=boxes_absolute_x_y_w_h)
+            boxes_absolute_x_y_w_h
             # shape → (samples, boxes, 4)
         ),
         axis = -1
@@ -509,12 +537,12 @@ if __name__ == '__main__':
             '-',
             n_valid_expected_bounding_boxes.shape
         )
-        print(
-            convert_bounding_boxes_to_submission_format(
-                batched_bounding_boxes=expected_bounding_boxes,
-                batched_n_valid_bounding_boxes=n_valid_expected_bounding_boxes
-            )
+
+        submissions = convert_bounding_boxes_to_final_format(
+            batched_bounding_boxes=expected_bounding_boxes,
+            batched_n_valid_bounding_boxes=n_valid_expected_bounding_boxes
         )
+        print(submissions)
 
         predictions = model(samples_and_labels[0])
 
@@ -530,11 +558,11 @@ if __name__ == '__main__':
             '-',
             n_valid_inferred_bounding_boxes.shape
         )
-        print(
-            convert_bounding_boxes_to_submission_format(
-                batched_bounding_boxes=inferred_bounding_boxes,
-                batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
-            )
-        )
 
-        break  # FIXME: too few & not un-normalized
+        submissions = convert_bounding_boxes_to_final_format(
+            batched_bounding_boxes=inferred_bounding_boxes,
+            batched_n_valid_bounding_boxes=n_valid_inferred_bounding_boxes
+        )
+        print(submissions)
+
+        break  # FIXME: not un-normalized
