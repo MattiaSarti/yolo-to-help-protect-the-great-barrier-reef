@@ -42,6 +42,7 @@ def infer_on_test_set_and_submit(trained_model_instance: Model) -> None:
     Predict bounding boxes on all test set images, while submitting
     predictions, in an online fashione: one sample at a time.
     """
+    raise NotImplementedError  # TODO: assert pixel_array.shape == (720, 1280, 3)
     import greatbarrierreef
 
 
