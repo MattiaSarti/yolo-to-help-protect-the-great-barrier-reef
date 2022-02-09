@@ -113,8 +113,8 @@ def get_cell_containing_bounding_box_center(
             - [
                 grid cell row index,
                 grid cell column index,
-                x coordindate of cell center,
-                y coordindate of cell center
+                x coordindate of cell top-left corner,
+                y coordindate of cell top-left corner
             ]
     """
     (
