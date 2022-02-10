@@ -831,8 +831,8 @@ def split_dataset_into_batched_training_and_validation_sets(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
 
-    # optimizing performances by pre-fetching final elements:
-    training_set = training_set.prefetch(buffer_size=AUTOTUNE)
+    # # optimizing performances by pre-fetching final elements:  # FIXME: OOM
+    # training_set = training_set.prefetch(buffer_size=AUTOTUNE)
 
     # validation set:
 
@@ -857,8 +857,8 @@ def split_dataset_into_batched_training_and_validation_sets(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
 
-    # optimizing performances by pre-fetching final elements:
-    validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
+    # # optimizing performances by pre-fetching final elements:  # FIXME: OOM
+    # validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
 
     return (training_set, validation_set)
 
