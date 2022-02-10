@@ -198,5 +198,5 @@ if __name__ == '__main__':
     train_and_validate_model(
         model_instance=model,
         training_set=training_samples_and_labels.take(4),
-        validation_set=validation_samples_and_labels.take(3),
+        validation_set=validation_samples_and_labels.take(3)
     )
