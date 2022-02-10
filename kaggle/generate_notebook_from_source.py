@@ -64,6 +64,11 @@ def create_notebook_assembling_all_source() -> None:
         new_markdown_cell(source='#### Settings'),
         # appending a code cell for the __name__ variable modification so as
         # to run only what required:
+        new_code_cell(
+            source="""! if [ -d "/kaggle/working/cache" ]; then rm -r """ +
+                   """/kaggle/working/cache; fi"""
+        ),
+        new_code_cell(source="""! mkdir /kaggle/working/cache"""),
         new_code_cell(source="""__name__ = 'main_by_mattia'""")
     ]
     for filename, source_text in source_code_files_paths:
