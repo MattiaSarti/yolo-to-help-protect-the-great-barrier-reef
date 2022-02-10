@@ -54,13 +54,13 @@ TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
 def plot_training_and_validation_statistics(
         training_epoch_numbers: List[int],
         training_loss_values: List[float],
-        training_metric_values: List[float],
         validation_epoch_numbers: List[int],
         validation_loss_values: List[float],
         validation_metric_values: List[float],
 ) -> None:
     """
-    Plot the training and validation loss and metric trends with epochs.
+    Plot and save the training and validation loss and metric trends with
+    epochs.
     """
     figure()
 
@@ -85,7 +85,6 @@ def plot_training_and_validation_statistics(
 
     figure()
 
-    plot(training_epoch_numbers, training_metric_values)
     plot(validation_epoch_numbers, validation_metric_values, 'ro')
 
     xlabel(xlabel="Epoch Number")
@@ -148,8 +147,7 @@ def train_and_validate_model(
             x=training_set,
             epochs=1,
         )
-        training_loss_trend.append(trainin_history.history[0][0])
-        training_metric_trend.append(trainin_history.history[1][0])
+        training_loss_trend.append(trainin_history.history['loss'][0])
 
         if epoch_number in EPOCHS_WHEN_VALIDATION_CARRIED_OUT:
             # validation:
@@ -173,7 +171,6 @@ def train_and_validate_model(
     plot_training_and_validation_statistics(
         training_epoch_numbers=epoch_numbers,
         training_loss_values=training_loss_trend,
-        training_metric_values=training_metric_trend,
         validation_epoch_numbers=EPOCHS_WHEN_VALIDATION_CARRIED_OUT,
         validation_loss_values=validation_loss_trend,
         validation_metric_values=validation_metric_trend,
