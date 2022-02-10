@@ -37,13 +37,14 @@ def fix_seeds_for_reproducible_results() -> None:
     set_seed(seed=0)
 
 
-
 def infer_on_test_set_and_submit(trained_model_instance: Model) -> None:
     """
     Predict bounding boxes on all test set images, while submitting
     predictions, in an online fashione: one sample at a time.
+    NOTE: the 'pixel_array's served by the competition API iterator are Numpy
+    arrays with shape (720, 1280, 3), thus a single sample at a time is
+    served, actually having to predict online.
     """
-    raise NotImplementedError  # TODO: assert pixel_array.shape == (720, 1280, 3)
     import greatbarrierreef
 
 

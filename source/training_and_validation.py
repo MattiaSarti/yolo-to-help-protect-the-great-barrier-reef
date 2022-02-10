@@ -44,15 +44,19 @@ N_EPOCHS = 10
 # NOTE: these are 1-based indexes:
 EPOCHS_WHEN_VALIDATION_CARRIED_OUT = [1, int(N_EPOCHS / 2), (N_EPOCHS - 1), N_EPOCHS]
 
-TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
-    getcwd(),
-    pardir,
-    'docs',
-    'pictures'
-)
+# only when running everything in a unified notebook on Kaggle's servers:
+if __name__ != 'main_by_mattia':
+    TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
+        getcwd(),
+        pardir,
+        'docs',
+        'pictures'
+    )
+else:
+    TRAINING_AND_VALIDATION_STATISTICS_DIR = getcwd()
 
 
-def plot_training_and_validation_statistics(
+def plot_and_save_training_and_validation_statistics(
         training_epoch_numbers: List[int],
         training_loss_values: List[float],
         validation_epoch_numbers: List[int],
@@ -169,7 +173,7 @@ def train_and_validate_model(
             validation_loss_trend.append(loss_and_metric[0])
             validation_metric_trend.append(loss_and_metric[1])
 
-    plot_training_and_validation_statistics(
+    plot_and_save_training_and_validation_statistics(
         training_epoch_numbers=epoch_numbers,
         training_loss_values=training_loss_trend,
         validation_epoch_numbers=EPOCHS_WHEN_VALIDATION_CARRIED_OUT,
