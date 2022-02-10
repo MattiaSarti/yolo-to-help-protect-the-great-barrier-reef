@@ -4,7 +4,7 @@ across the different repository files.
 """
 
 
-from os import getcwd, listdir, pardir
+from os import getcwd, pardir
 from os.path import join as path_join
 
 from nbformat import write

@@ -41,12 +41,13 @@ def infer_on_test_set_and_submit(trained_model_instance: Model) -> None:
     """
     Predict bounding boxes on all test set images, while submitting
     predictions, in an online fashione: one sample at a time.
+    NOTE: the logic is the same as specified in the Kaggle competition's
+    rules.
     NOTE: the 'pixel_array's served by the competition API iterator are Numpy
     arrays with shape (720, 1280, 3), thus a single sample at a time is
     served, actually having to predict online.
     """
     import greatbarrierreef
-
 
     # initialize the environment:
     env = greatbarrierreef.make_env()

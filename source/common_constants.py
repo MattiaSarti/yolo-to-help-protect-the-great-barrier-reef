@@ -92,10 +92,10 @@ def compute_weights_to_balance_anchors_emptiness() -> Tuple[float, float]:
     )
 
     full_anchors_weight = 1 / average_n_full_anchors_per_image
-    empty_anchors_weight = 1  / average_n_empty_anchors_per_image
+    empty_anchors_weight = 1 / average_n_empty_anchors_per_image
 
     weights_sum = full_anchors_weight + empty_anchors_weight
-    
+
     normalized_full_anchors_weight = full_anchors_weight / weights_sum
     normalized_empty_anchors_weight = empty_anchors_weight / weights_sum
 
@@ -155,8 +155,8 @@ N_ANCHORS_PER_IMAGE = (
     LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
     LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
 ) = compute_weights_to_balance_anchors_emptiness()
-# FIXME: is this balancing reasonable?  with 0.999999990162037 vs 9.837962962962963e-09,
-# using float32 will truncate the second term to 0!!
+# FIXME: is this balancing reasonable?  with 0.999999990162037 vs
+# 9.837962962962963e-09, using float32 will truncate the second term to 0!!
 (
     LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
     LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS

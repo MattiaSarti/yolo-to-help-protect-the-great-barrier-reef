@@ -1,5 +1,6 @@
 """
-Utilities for inference time, for converting model outputs to bounding boxes' predictions.
+Utilities for inference time, for converting model outputs to bounding boxes'
+predictions.
 """
 
 
@@ -346,7 +347,7 @@ def convert_bounding_boxes_to_final_format(
     """
     if n_valid_bounding_boxes == 0:
         return '' if as_string else []
-    
+
     image_bounding_boxes = (
         image_bounding_boxes.numpy().tolist()[:n_valid_bounding_boxes]
     )
@@ -512,7 +513,7 @@ def get_bounding_boxes_from_model_outputs(
             boxes_absolute_x_y_w_h
             # shape → (samples, boxes, 4)
         ),
-        axis = -1
+        axis=-1
     )  # shape → (samples, boxes, attributes)
 
     return (

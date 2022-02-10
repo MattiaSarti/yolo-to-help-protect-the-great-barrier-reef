@@ -202,7 +202,7 @@ def evaluate_batched_bounding_boxes_matching(
 
             if not current_bounding_box_matched:
                 false_positives += 1
-        
+
         false_negatives = len(image_expected_bounding_boxes)
 
         matches.append([true_positives, false_positives, false_negatives])

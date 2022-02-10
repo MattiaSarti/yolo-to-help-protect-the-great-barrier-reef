@@ -130,7 +130,7 @@ def get_cell_containing_bounding_box_center(
             a=np_sum(
                 a=(
                     (OUTPUT_GRID_CELL_CENTERS_XY_COORDS -
-                    center_absolute_x_and_y_coords) ** 2
+                     center_absolute_x_and_y_coords) ** 2
                 ),
                 axis=-1
             )
@@ -334,7 +334,7 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
                 maximum_bounding_box_height = bounding_box['height']
             if bounding_box['width'] > maximum_bounding_box_width:
                 maximum_bounding_box_width = bounding_box['width']
-        
+
         if n_bounding_boxes > 1:
             for centers_coords_pair in combinations(
                     iterable=bounding_boxes_centers_x_and_y_coords,
@@ -409,7 +409,9 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
                         x_coord_difference
                     )
                 if (
-                    y_coord_difference > maximum_bounding_boxes_centers_y_coord_distance
+                        y_coord_difference > (
+                            maximum_bounding_boxes_centers_y_coord_distance
+                        )
                 ):
                     maximum_bounding_boxes_centers_y_coord_distance = (
                         y_coord_difference
@@ -540,12 +542,12 @@ def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
         "see plot"
     )
     print(
-        "\t- histogram of bounding boxes' centers x-coord distance [pixels]: " +
-        "see plot"
+        "\t- histogram of bounding boxes' centers x-coord distance " +
+        "[pixels]: see plot"
     )
     print(
-        "\t- histogram of bounding boxes' centers y-coord distance [pixels]: " +
-        "see plot"
+        "\t- histogram of bounding boxes' centers y-coord distance " +
+        "[pixels]: see plot"
     )
 
     plt_figure()
@@ -1017,7 +1019,7 @@ def turn_bounding_boxes_to_model_outputs(
                 "the same output cell in this sample."
             )
         labels[cell_row_index, cell_column_index, label_anchor_index, :] = [
-            1.0,  # FIXME: is this supposed to be just an objectiveness score or an IoU?
+            1.0,  # FIXME: supposed to be an objectiveness score or an IoU?
             relative_x_coord,
             relative_y_coord,
             relative_width,
