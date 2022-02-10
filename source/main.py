@@ -90,7 +90,7 @@ def main() -> None:
 
     model = YOLOv3Variant()
 
-    _ = train_and_validate_model(
+    train_and_validate_model(
         model_instance=model,
         training_set=training_samples_and_labels,
         validation_set=validation_samples_and_labels,
