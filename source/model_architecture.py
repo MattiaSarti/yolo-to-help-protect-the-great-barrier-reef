@@ -32,7 +32,6 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
     )
-    # from inference import get_bounding_boxes_from_model_outputs
 
 
 CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
