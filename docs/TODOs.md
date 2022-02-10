@@ -26,9 +26,9 @@
 - [x] test set inference
 - [x] fix determinism for reproducibility
 - [ ] checkpoint averaging
-- [ ] cross validation
 - [ ] hyperparameter tuning
-- [ ] many experiments
+- [ ] cross validation
+- [ ] many architectural experiments
 
 
 # Observations for Optimization
