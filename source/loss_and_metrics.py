@@ -204,11 +204,7 @@ def evaluate_batched_bounding_boxes_matching(
         
         false_negatives = len(image_expected_bounding_boxes)
 
-        matches.append(
-            true_positives,
-            false_positives,
-            false_negatives
-        )
+        matches.append([true_positives, false_positives, false_negatives])
 
     return matches
 
