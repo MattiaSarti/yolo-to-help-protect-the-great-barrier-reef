@@ -3,7 +3,7 @@ Model architecture definition.
 """
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import Tensor
 from tensorflow.keras import Input, Model, Sequential
 from tensorflow.keras.activations import sigmoid
@@ -18,7 +18,7 @@ from tensorflow.keras.layers.experimental.preprocessing import (
     RandomFlip,
     Rescaling
 )
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
@@ -129,7 +129,7 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
 
         # final 1x1 convolutions to predict bounding boxes' attributes from
         # grid anchors' feature maps:
-        outputs = Convolution2D(
+        outputs = Convolution2D(  # pylint: disable=repeated-keyword
             filters=(N_ANCHORS_PER_CELL * N_OUTPUTS_PER_ANCHOR),
             **(
                 dict(CONVOLUTIONAL_LAYERS_COMMON_KWARGS, kernel_size=(1, 1))
@@ -221,4 +221,3 @@ if __name__ == '__main__':
     model = YOLOv3Variant()
 
     model.yolov3_fcn.summary()
-    # TODO: model.plot_model(...)

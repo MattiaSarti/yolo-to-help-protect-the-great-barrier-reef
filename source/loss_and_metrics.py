@@ -37,7 +37,7 @@ considered true and false positives."
 
 from typing import List, Tuple
 
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import (
     expand_dims,
     stack,
@@ -55,7 +55,7 @@ from tensorflow.math import (
     reduce_mean,
     reduce_sum
 )
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
@@ -153,7 +153,7 @@ def compute_mean_f2_scores(
                 + EPSILON
             )
         )
-    return (cumulative_f2_score / number_of_f2_scores_summed)
+    return cumulative_f2_score / number_of_f2_scores_summed
 
 
 def evaluate_batched_bounding_boxes_matching(
@@ -275,7 +275,7 @@ def iou_threshold_averaged_f2_score(y_true: Tensor, y_pred: Tensor) -> Tensor:
     )
 
 
-def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:
+def yolov3_variant_loss(y_true: Tensor, y_pred: Tensor) -> Tensor:  # noqa: E501 pylint: disable=too-many-locals
     """
     Loss function minimized to train the defined YOLOv3 variant.
     ---

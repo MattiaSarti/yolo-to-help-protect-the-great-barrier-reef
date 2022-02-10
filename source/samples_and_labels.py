@@ -1,3 +1,4 @@
+#pylint: disable=too-many-lines
 """
 Sample and label extraction from the raw dataset files, inspection and
 preprocessing for feeding the model.
@@ -27,11 +28,11 @@ from matplotlib.pyplot import (
     xticks as plt_xticks
 )
 from numpy import argmin, sum as np_sum, unravel_index, zeros
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import convert_to_tensor, py_function, Tensor
 from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
@@ -119,7 +120,7 @@ def get_cell_containing_bounding_box_center(
                 y coordindate of cell top-left corner
             ]
     """
-    (
+    (  # pylint: disable=unbalanced-tuple-unpacking
         grid_cell_enclosing_bounding_box_center_row_index,
         grid_cell_enclosing_bounding_box_center_column_index
     ) = unravel_index(
@@ -189,23 +190,26 @@ def dataset_of_samples_and_bounding_boxes() -> Dataset:
         tensors=[*IMAGE_PATHS_TO_BOUNDING_BOXES]  # only keys included
     )
 
-    return (
-        image_paths_dataset
-        .map(
-            map_func=lambda image_path: py_function(
-                func=load_sample_and_get_bounding_boxes,
-                inp=[image_path],
-                Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
-            ),
-            num_parallel_calls=AUTOTUNE,
-            deterministic=True
-        )
-        # FIXME
-        # # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_STATISTICS_SET)
-        # optimizing performances by pre-fetching final elements:
-        .prefetch(buffer_size=AUTOTUNE)
+    image_paths_dataset = image_paths_dataset.map(
+        map_func=lambda image_path: py_function(
+            func=load_sample_and_get_bounding_boxes,
+            inp=[image_path],
+            Tout=(DATA_TYPE_FOR_INPUTS, DATA_TYPE_FOR_OUTPUTS)
+        ),
+        num_parallel_calls=AUTOTUNE,
+        deterministic=True
     )
+
+    if __name__ == 'main_by_mattia':
+        # optimizing performances by caching end-results:
+        image_paths_dataset = image_paths_dataset.cache(
+            filename=CACHE_FILE_PATH_FOR_STATISTICS_SET
+        )
+
+    # optimizing performances by pre-fetching final elements:
+    image_paths_dataset = image_paths_dataset.prefetch(buffer_size=AUTOTUNE)
+
+    return image_paths_dataset
 
 
 def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
@@ -242,7 +246,7 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
     )
 
 
-def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:
+def inspect_bounding_boxes_statistics_on_training_n_validation_set() -> None:  # noqa: E501 pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """
     Inspect and print the following statistics of bounding boxes in the
     training-plus-validation set:
@@ -902,14 +906,17 @@ def show_dataset_as_movie(
                 for cell_column_index in range(OUTPUT_GRID_N_COLUMNS):
                     # filtering out grid cells not containing any anchor:
                     if (
-                        sample_and_label[1][
-                            cell_row_index,
-                            cell_column_index,
-                            :,
-                            :
-                        ].numpy() == zeros(
-                            shape=(N_ANCHORS_PER_CELL, N_OUTPUTS_PER_ANCHOR)
-                        )
+                            sample_and_label[1][
+                                cell_row_index,
+                                cell_column_index,
+                                :,
+                                :
+                            ].numpy() == zeros(
+                                shape=(
+                                    N_ANCHORS_PER_CELL,
+                                    N_OUTPUTS_PER_ANCHOR
+                                )
+                            )
                     ).all():
                         continue
 
@@ -1061,7 +1068,7 @@ if __name__ == '__main__':
         )
 
     (
-        training_set, validation_set
+        training_dataset, validation_dataset
     ) = split_dataset_into_batched_training_and_validation_sets(
         training_plus_validation_set=samples_n_model_outputs_dataset
     )

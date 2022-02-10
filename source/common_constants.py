@@ -6,9 +6,9 @@ Convenient definitions of common constants.
 from typing import Tuple
 
 from numpy import arange, meshgrid, ndarray, stack
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import float32 as tf_float32, uint8 as tf_uint8
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 
 def compute_grid_cell_centers_xy_coords() -> Tuple[ndarray, ndarray]:
@@ -122,7 +122,7 @@ ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS = (
     (0.6, 0.4),
     (0.5, 0.5),
     # (0.4, 0.6)  # NOTE: empirically observed: this anchor is less relevant
-)  # TODO: choose these based on the dataset
+)
 assert all(
     [
         (weight[0] + weight[1] == 1) for weight in

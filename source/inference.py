@@ -6,7 +6,7 @@ predictions.
 
 from typing import List, Tuple, Union
 
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import (
     cast,
     clip_by_value,
@@ -26,7 +26,7 @@ from tensorflow.math import (
     subtract,
     multiply
 )
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
@@ -88,7 +88,7 @@ def batched_anchors_rel_to_real_abs_x_y_w_h(
                 4
             )
     """
-    expanded_batched_anchors_corners_absolute_x_y = cast(
+    expanded_batched_anchors_corners_absolute_x_y = cast(  # noqa: E501 pylint: disable=unexpected-keyword-arg,no-value-for-parameter
         # NOTE: they are already discretized, so any truncation due to casting
         # is not relevant
         x=expand_dims(
@@ -137,7 +137,7 @@ def batched_anchors_rel_to_real_abs_x_y_w_h(
     )  # shape → (samples, anchors_per_image, 1)
 
     return expand_dims(
-        input=concat(
+        input=concat(  # noqa: E501 pylint: disable=unexpected-keyword-arg,no-value-for-parameter
             values=(
                 batched_anchors_absolute_x,
                 batched_anchors_absolute_y,
@@ -213,7 +213,7 @@ def batched_anchors_x_y_w_h_to_x1_y1_x2_y2(
     )  # shape → (samples, anchors_per_image, 1)
 
     return expand_dims(
-        input=concat(
+        input=concat(  # noqa: E501 pylint: disable=unexpected-keyword-arg,no-value-for-parameter
             values=(
                 batched_anchors_absolute_x1,
                 batched_anchors_absolute_y1,
@@ -320,21 +320,20 @@ def convert_batched_bounding_boxes_to_final_format(
         )
 
     # if the batched inputs contain more than a single sample:
-    else:
-        batch_of_converted_bounding_boxes = []
 
-        for current_image_bounding_boxes, n_valid_image_bounding_boxes in zip(
-                batched_bounding_boxes, batched_n_valid_bounding_boxes
-        ):
-            batch_of_converted_bounding_boxes.append(
-                convert_bounding_boxes_to_final_format(
-                    image_bounding_boxes=current_image_bounding_boxes,
-                    n_valid_bounding_boxes=n_valid_image_bounding_boxes,
-                    as_string=as_strings
-                )
+    batch_of_converted_bounding_boxes = []
+    for current_image_bounding_boxes, n_valid_image_bounding_boxes in zip(
+            batched_bounding_boxes, batched_n_valid_bounding_boxes
+    ):
+        batch_of_converted_bounding_boxes.append(
+            convert_bounding_boxes_to_final_format(
+                image_bounding_boxes=current_image_bounding_boxes,
+                n_valid_bounding_boxes=n_valid_image_bounding_boxes,
+                as_string=as_strings
             )
+        )
 
-        return batch_of_converted_bounding_boxes
+    return batch_of_converted_bounding_boxes
 
 
 def convert_bounding_boxes_to_final_format(
@@ -506,7 +505,7 @@ def get_bounding_boxes_from_model_outputs(
         batched_anchors_absolute_x1_y1_x2_y2=boxes_absolute_x1_y1_x2_y2
     )  # shape → (samples, boxes, 4)
 
-    bounding_boxes_scores_plus_absolute_x_y_w_h = concat(
+    bounding_boxes_scores_plus_absolute_x_y_w_h = concat(  # noqa: E501 pylint: disable=unexpected-keyword-arg,no-value-for-parameter
         values=(
             expand_dims(input=boxes_scores, axis=-1),
             # shape → (samples, boxes, 1)

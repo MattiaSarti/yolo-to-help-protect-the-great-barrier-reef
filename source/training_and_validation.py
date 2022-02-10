@@ -19,11 +19,11 @@ from matplotlib.pyplot import (
     xlabel,
     ylabel
 )
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':

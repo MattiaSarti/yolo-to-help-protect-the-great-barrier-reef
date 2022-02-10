@@ -6,11 +6,11 @@ Execution of the proposed competition solution.
 from random import seed as random_seed
 
 from numpy.random import seed as numpy_seed
-# pylint: disable=import-error
+# pylint: disable=import-error,no-name-in-module
 from tensorflow import convert_to_tensor, expand_dims
 from tensorflow.keras import Model
 from tensorflow.random import set_seed
-# pylint: enable=import-error
+# pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
@@ -47,7 +47,7 @@ def infer_on_test_set_and_submit(trained_model_instance: Model) -> None:
     arrays with shape (720, 1280, 3), thus a single sample at a time is
     served, actually having to predict online.
     """
-    import greatbarrierreef
+    import greatbarrierreef  # noqa: E501 pylint: disable=import-outside-toplevel,import-error
 
     # initialize the environment:
     env = greatbarrierreef.make_env()
