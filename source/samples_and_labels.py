@@ -51,7 +51,7 @@ if __name__ != 'main_by_mattia':
     )
 
 
-MINI_BATCH_SIZE = 4  # TODO
+MINI_BATCH_SIZE = 2  # 4  # TODO
 VALIDATION_SET_PORTION_OF_DATA = 0.3
 
 if __name__ != 'main_by_mattia':
