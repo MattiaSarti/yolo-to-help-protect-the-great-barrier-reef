@@ -53,7 +53,7 @@ if __name__ != 'main_by_mattia':
     )
 
 
-MINI_BATCH_SIZE = 8  # TODO
+MINI_BATCH_SIZE = 4  # TODO
 VALIDATION_SET_PORTION_OF_DATA = 0.1  # 0.3
 
 # only when running everything in a unified notebook on Kaggle's servers:
@@ -809,17 +809,12 @@ def split_dataset_into_batched_training_and_validation_sets(
         N_TRAINING_PLUS_VALIDATION_SAMPLES - n_samples_in_validation_set
     )
 
+    # training set:
+
+    # selecting only the training samples and labels:
     training_set = (
         training_plus_validation_set
-        # selecting only the training samples and labels:
         .take(count=n_samples_in_training_set)
-        # creating mini-batches:
-        .batch(
-            batch_size=MINI_BATCH_SIZE,
-            drop_remainder=False,
-            num_parallel_calls=AUTOTUNE,
-            deterministic=True
-        )
     )
     # only when running everything in a unified notebook on Kaggle's servers:
     if __name__ == 'main_by_mattia':
@@ -827,14 +822,8 @@ def split_dataset_into_batched_training_and_validation_sets(
         training_set = training_set.cache(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
-    # optimizing performances by pre-fetching final elements:
-    training_set = training_set.prefetch(buffer_size=AUTOTUNE)
-
-    validation_set = (
-        training_plus_validation_set
-        # selecting only the validation samples and labels:
-        .skip(count=n_samples_in_training_set)
-        .take(count=n_samples_in_validation_set)
+    training_set = (
+        training_set
         # creating mini-batches:
         .batch(
             batch_size=MINI_BATCH_SIZE,
@@ -842,6 +831,17 @@ def split_dataset_into_batched_training_and_validation_sets(
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
+        # optimizing performances by pre-fetching final elements:
+        .prefetch(buffer_size=AUTOTUNE)
+    )
+
+    # validation set:
+
+    validation_set = (
+        training_plus_validation_set
+        # selecting only the validation samples and labels:
+        .skip(count=n_samples_in_training_set)
+        .take(count=n_samples_in_validation_set)
     )
     # only when running everything in a unified notebook on Kaggle's servers:
     if __name__ == 'main_by_mattia':
@@ -849,8 +849,18 @@ def split_dataset_into_batched_training_and_validation_sets(
         validation_set = validation_set.cache(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
-    # optimizing performances by pre-fetching final elements:
-    validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
+    validation_set = (
+        validation_set
+        # creating mini-batches:
+        .batch(
+            batch_size=MINI_BATCH_SIZE,
+            drop_remainder=False,
+            num_parallel_calls=AUTOTUNE,
+            deterministic=True
+        )
+        # optimizing performances by pre-fetching final elements:
+        .prefetch(buffer_size=AUTOTUNE)
+    )
 
     return (training_set, validation_set)
 
