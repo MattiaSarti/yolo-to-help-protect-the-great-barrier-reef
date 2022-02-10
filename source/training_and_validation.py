@@ -25,6 +25,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 # pylint: enable=import-error
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     from loss_and_metrics import (
         iou_threshold_averaged_f2_score,

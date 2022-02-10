@@ -33,6 +33,7 @@ from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
 # pylint: enable=import-error
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     from common_constants import (
         ANCHORS_WIDTH_VS_HEIGHT_WEIGHTS,
@@ -54,6 +55,7 @@ if __name__ != 'main_by_mattia':
 MINI_BATCH_SIZE = 2  # 4  # TODO
 VALIDATION_SET_PORTION_OF_DATA = 0.3
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     DATASET_DIR = path_join(
         getcwd(),
@@ -812,12 +814,16 @@ def split_dataset_into_batched_training_and_validation_sets(
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
-        # FIXME
-        # # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
-        # optimizing performances by pre-fetching final elements:
-        .prefetch(buffer_size=AUTOTUNE)
     )
+    # only when running everything in a unified notebook on Kaggle's servers:
+    if __name__ == 'main_by_mattia':
+        # optimizing performances by caching end-results:
+        training_set = training_set.cache(
+            filename=CACHE_FILE_PATH_FOR_TRAINING_SET
+        )
+    # optimizing performances by pre-fetching final elements:
+    training_set = training_set.prefetch(buffer_size=AUTOTUNE)
+
     validation_set = (
         training_plus_validation_set
         # selecting only the validation samples and labels:
@@ -830,12 +836,15 @@ def split_dataset_into_batched_training_and_validation_sets(
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
-        # FIXME
-        # # optimizing performances by caching end-results:
-        # .cache(filename=CACHE_FILE_PATH_FOR_TRAINING_SET)
-        # optimizing performances by pre-fetching final elements:
-        .prefetch(buffer_size=AUTOTUNE)
     )
+    # only when running everything in a unified notebook on Kaggle's servers:
+    if __name__ == 'main_by_mattia':
+        # optimizing performances by caching end-results:
+        validation_set = validation_set.cache(
+            filename=CACHE_FILE_PATH_FOR_TRAINING_SET
+        )
+    # optimizing performances by pre-fetching final elements:
+    validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
 
     return (training_set, validation_set)
 

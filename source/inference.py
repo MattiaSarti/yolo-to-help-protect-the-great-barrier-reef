@@ -27,6 +27,7 @@ from tensorflow.math import (
 )
 # pylint: enable=import-error
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     from common_constants import (
         DATA_TYPE_FOR_OUTPUTS,

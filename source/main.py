@@ -12,6 +12,7 @@ from tensorflow.keras import Model
 from tensorflow.random import set_seed
 # pylint: enable=import-error
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     from common_constants import DATA_TYPE_FOR_INPUTS
     from inference import (
@@ -99,5 +100,6 @@ def main() -> None:
     infer_on_test_set_and_submit(trained_model_instance=model)
 
 
+# only when running everything in a unified notebook on Kaggle's servers:
 if __name__ == 'main_by_mattia':
     main()
