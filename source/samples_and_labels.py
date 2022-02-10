@@ -54,7 +54,7 @@ if __name__ != 'main_by_mattia':
 
 
 MINI_BATCH_SIZE = 2  # 4  # TODO
-VALIDATION_SET_PORTION_OF_DATA = 0.3
+VALIDATION_SET_PORTION_OF_DATA = 0.1  # 0.3
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
