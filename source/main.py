@@ -4,6 +4,7 @@ Execution of the proposed competition solution.
 
 
 from random import seed as random_seed
+from time import time
 
 from numpy.random import seed as numpy_seed
 # pylint: disable=import-error,no-name-in-module
@@ -83,6 +84,7 @@ def main() -> None:
     """
     Execute the proposed competition solution.
     """
+
     fix_seeds_for_reproducible_results()
 
     (
@@ -91,7 +93,7 @@ def main() -> None:
         training_plus_validation_set=dataset_of_samples_and_model_outputs()
     )
 
-    model = YOLOv3Variant()
+    model = create_model()
 
     train_and_validate_model(
         model_instance=model,
@@ -100,6 +102,56 @@ def main() -> None:
     )
 
     infer_on_test_set_and_submit(trained_model_instance=model)
+
+
+def time_it(description: str):
+    """
+    Monitor the execution time (rounded to minutes) of the wrapped function,
+    printing the result together with the input description.
+    """
+    def time_it_with_hardcoded_description(wrapped_function):
+        """
+        Monitor the execution time (rounded to minutes) of the wrapped
+        function, printing the result together with the passed, hardcoded
+        description.
+        """
+        def wrapper(*args, **kwargs):
+            """
+            Wrap the function to be executed, here hardcoded, with the timing
+            and printing operations required.
+            """
+            tic = time()
+
+            result = wrapped_function(*args, **kwargs)
+
+            toc = time()
+            print(
+                '\n\t' + description +
+                f' <- {round((toc - tic) / 60)} minutes\n'
+            )
+
+            return result
+
+        return wrapper
+
+    return time_it_with_hardcoded_description
+
+
+# adding decorators to time the following functions:
+(
+    split_dataset_into_batched_training_and_validation_sets
+) = time_it(description="DATASETS INITIALIZED")(
+    split_dataset_into_batched_training_and_validation_sets
+)
+create_model = time_it(description="MODEL INITIALIZED")(
+    lambda: YOLOv3Variant()
+)
+train_and_validate_model = time_it(description="MODEL TRAINED AND VALIDATED")(
+    train_and_validate_model
+)
+infer_on_test_set_and_submit = time_it(description="PREDICTIONS MADE")(
+    infer_on_test_set_and_submit
+)
 
 
 # only when running everything in a unified notebook on Kaggle's servers:
