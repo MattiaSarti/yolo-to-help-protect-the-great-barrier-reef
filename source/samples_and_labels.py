@@ -11,6 +11,7 @@ from json import loads as json_loads
 from math import sqrt
 from os import getcwd, pardir
 from os.path import join as path_join
+from random import shuffle
 from typing import Dict, List, Tuple
 
 from matplotlib.patches import Rectangle
@@ -217,19 +218,29 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
     Build a TensorFlow dataset that can iterate over all the dataset samples
     and the respective labels containing model outputs, in a shuffled order.
     """
+    image_paths = [*IMAGE_PATHS_TO_MODEL_OUTPUTS]  # only keys included
+
+    # shuffling is carried out beforehand so as to prevent TensorFlow's
+    # dataset elements from being shuffled entirely in memory - shuffling
+    # happens before the TensorFlow's dataset creation itself, this way:
+    if shuffle:
+        shuffle(image_paths)
+
     image_paths_dataset = Dataset.from_tensor_slices(
-        tensors=[*IMAGE_PATHS_TO_MODEL_OUTPUTS]  # only keys included
+        tensors=image_paths
     )
 
-    # NOTE: shuffling is carried out here to have acceptable performance with
-    # a shuffling buffer size that allows to take the whole set into memory
-    # in case shuffling is desired:
-    if shuffle:
-        image_paths_dataset = image_paths_dataset.shuffle(
-            buffer_size=N_TRAINING_PLUS_VALIDATION_SAMPLES,
-            seed=0,
-            reshuffle_each_iteration=False  # NOTE: relevant when splitting
-        )
+    # FIXME: OOM
+
+    # # NOTE: shuffling is carried out here to have acceptable performance
+    # # with a shuffling buffer size that allows to take the whole set into
+    # # memory in case shuffling is desired:
+    # if shuffle:
+    #     image_paths_dataset = image_paths_dataset.shuffle(
+    #         buffer_size=N_TRAINING_PLUS_VALIDATION_SAMPLES,
+    #         seed=0,
+    #         reshuffle_each_iteration=False  # NOTE: relevant when splitting
+    #     )
 
     # NOTE: further optimizations on this dataset - that is the one employed
     # for training/validation - are carried out later, after
@@ -831,8 +842,8 @@ def split_dataset_into_batched_training_and_validation_sets(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
 
-    # # optimizing performances by pre-fetching final elements:  # FIXME: OOM
-    # training_set = training_set.prefetch(buffer_size=AUTOTUNE)
+    # optimizing performances by pre-fetching final elements:
+    training_set = training_set.prefetch(buffer_size=AUTOTUNE)
 
     # validation set:
 
@@ -857,8 +868,8 @@ def split_dataset_into_batched_training_and_validation_sets(
             filename=CACHE_FILE_PATH_FOR_TRAINING_SET
         )
 
-    # # optimizing performances by pre-fetching final elements:  # FIXME: OOM
-    # validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
+    # optimizing performances by pre-fetching final elements:
+    validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
 
     return (training_set, validation_set)
 
