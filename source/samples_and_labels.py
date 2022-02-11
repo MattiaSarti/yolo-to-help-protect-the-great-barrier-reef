@@ -230,7 +230,7 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
         tensors=image_paths
     )
 
-    # FIXME: OOM
+    # FIXME: the following commands may cause out-of-memory errors:
 
     # # NOTE: shuffling is carried out here to have acceptable performance
     # # with a shuffling buffer size that allows to take the whole set into
@@ -835,15 +835,17 @@ def split_dataset_into_batched_training_and_validation_sets(
         )
     )
 
-    # only when running everything in a unified notebook on Kaggle's servers:
-    if __name__ == 'main_by_mattia':
-        # optimizing performances by caching end-results:
-        training_set = training_set.cache(
-            filename=CACHE_FILE_PATH_FOR_TRAINING_SET
-        )
+    # FIXME: the following commands may cause out-of-memory errors:
 
-    # optimizing performances by pre-fetching final elements:
-    training_set = training_set.prefetch(buffer_size=AUTOTUNE)
+    # # only when running everything in a unified notebook on Kaggle's servers:
+    # if __name__ == 'main_by_mattia':
+    #     # optimizing performances by caching end-results:
+    #     training_set = training_set.cache(
+    #         filename=CACHE_FILE_PATH_FOR_TRAINING_SET
+    #     )
+
+    # # optimizing performances by pre-fetching final elements:
+    # training_set = training_set.prefetch(buffer_size=AUTOTUNE)
 
     # validation set:
 
@@ -861,15 +863,17 @@ def split_dataset_into_batched_training_and_validation_sets(
         )
     )
 
-    # only when running everything in a unified notebook on Kaggle's servers:
-    if __name__ == 'main_by_mattia':
-        # optimizing performances by caching end-results:
-        validation_set = validation_set.cache(
-            filename=CACHE_FILE_PATH_FOR_TRAINING_SET
-        )
+    # FIXME: the following commands may cause out-of-memory errors:
 
-    # optimizing performances by pre-fetching final elements:
-    validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
+    # # only when running everything in a unified notebook on Kaggle's servers:
+    # if __name__ == 'main_by_mattia':
+    #     # optimizing performances by caching end-results:
+    #     validation_set = validation_set.cache(
+    #         filename=CACHE_FILE_PATH_FOR_TRAINING_SET
+    #     )
+
+    # # optimizing performances by pre-fetching final elements:
+    # validation_set = validation_set.prefetch(buffer_size=AUTOTUNE)
 
     return (training_set, validation_set)
 
