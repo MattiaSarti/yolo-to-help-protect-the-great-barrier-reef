@@ -11,7 +11,7 @@ from json import loads as json_loads
 from math import sqrt
 from os import getcwd, pardir
 from os.path import join as path_join
-from random import shuffle
+from random import shuffle as random_shuffle
 from typing import Dict, List, Tuple
 
 from matplotlib.patches import Rectangle
@@ -224,7 +224,7 @@ def dataset_of_samples_and_model_outputs(shuffle: bool = True) -> Dataset:
     # dataset elements from being shuffled entirely in memory - shuffling
     # happens before the TensorFlow's dataset creation itself, this way:
     if shuffle:
-        shuffle(image_paths)
+        random_shuffle(image_paths)
 
     image_paths_dataset = Dataset.from_tensor_slices(
         tensors=image_paths
