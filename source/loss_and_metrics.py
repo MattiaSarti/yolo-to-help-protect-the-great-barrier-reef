@@ -196,7 +196,7 @@ def evaluate_batched_bounding_boxes_matching(
                         ) >= iou_threshold
                 ):
                     current_bounding_box_matched = True
-                    image_expected_bounding_boxes.remove(index)
+                    del image_expected_bounding_boxes[index]
                     true_positives += 1
                     break
 
