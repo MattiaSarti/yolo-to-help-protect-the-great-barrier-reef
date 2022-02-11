@@ -829,7 +829,7 @@ def split_dataset_into_batched_training_and_validation_sets(
         # creating mini-batches:
         .batch(
             batch_size=MINI_BATCH_SIZE,
-            drop_remainder=False,
+            drop_remainder=True,
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
@@ -857,7 +857,7 @@ def split_dataset_into_batched_training_and_validation_sets(
         # creating mini-batches:
         .batch(
             batch_size=MINI_BATCH_SIZE,
-            drop_remainder=False,
+            drop_remainder=True,
             num_parallel_calls=AUTOTUNE,
             deterministic=True
         )
