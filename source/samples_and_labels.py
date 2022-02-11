@@ -813,9 +813,17 @@ def split_dataset_into_batched_training_and_validation_sets(
     Split the input dataset into a training set and a validation set, both
     already divided into mini-batches.
     """
-    n_samples_in_validation_set = int(
-        VALIDATION_SET_PORTION_OF_DATA * N_TRAINING_PLUS_VALIDATION_SAMPLES
+    # defining the number of training (and validation) samples so that the
+    # number of training ones is already multiple of the mini-batch size,
+    # in order to discard the least possible amount of samples when batching
+    # later with 'drop_remainder=True' - by simply rounding the raw number of
+    # training samples that reflects the defined portion to the nearest
+    # multiple of the mini-batch size:
+    n_samples_in_validation_set = MINI_BATCH_SIZE * round(
+        (VALIDATION_SET_PORTION_OF_DATA * N_TRAINING_PLUS_VALIDATION_SAMPLES)
+        / MINI_BATCH_SIZE
     )
+    n_samples_in_validation_set = n_samples_in_validation_set
     n_samples_in_training_set = (
         N_TRAINING_PLUS_VALIDATION_SAMPLES - n_samples_in_validation_set
     )
