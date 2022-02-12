@@ -39,12 +39,12 @@ if __name__ != 'main_by_mattia':
 
 
 LEARNING_RATE = 1e-3
-N_EPOCHS = 10
+N_EPOCHS = 7
 
 # NOTE: these are 1-based indexes:
 EPOCHS_WHEN_VALIDATION_CARRIED_OUT = [
     # 1,
-    int(N_EPOCHS / 2),
+    round(N_EPOCHS / 2),
     # (N_EPOCHS - 1),
     N_EPOCHS
 ]
