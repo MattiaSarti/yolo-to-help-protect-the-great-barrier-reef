@@ -43,8 +43,8 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'activation': None,
     'use_bias': True
 }
-DOWNSAMPLING_STEPS = 3  # 4
-FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 64  # 16
+DOWNSAMPLING_STEPS = 4
+FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 16
 INPUT_NORMALIZATION_OFFSET = 0.0
 INPUT_NORMALIZATION_RESCALING_FACTOR = (1. / 255)
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
@@ -56,7 +56,7 @@ POOLING_LAYERS_COMMON_KWARGS = {
     'padding': 'valid',
     'data_format': 'channels_last',
 }
-RESIZE = True
+RESIZE = False
 RESIZING_INTERPOLATION = 'bilinear'
 
 
@@ -188,5 +188,4 @@ def build_yolov3_variant_architecture() -> Model:
 
 if __name__ == '__main__':
     model = build_yolov3_variant_architecture()
-
     model.summary()
