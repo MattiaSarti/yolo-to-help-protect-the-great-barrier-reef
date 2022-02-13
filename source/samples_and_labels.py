@@ -928,6 +928,37 @@ def show_dataset_as_movie(
         # showing the image:
         axes.imshow(sample_and_label[0].numpy())
 
+        if also_show_predictions:
+            # showing predictions:
+
+            # computing the predicted bounding boxes for the current image:
+            predictions = convert_batched_bounding_boxes_to_final_format(
+                *(
+                    get_bounding_boxes_from_model_outputs(
+                        model_outputs=model(
+                            expand_dims(input=sample_and_label[0], axis=0)
+                        ),
+                        from_labels=False
+                    )
+                ),
+                predicting_online=True,
+                as_strings=False
+            )
+
+            # adding each predicted bounding box plot with brightness
+            # proportional to its confidence:
+            for bounding_box in predictions:
+                axes.add_patch(
+                    p=Rectangle(
+                        xy=(bounding_box[1], bounding_box[2]),
+                        width=bounding_box[3],
+                        height=bounding_box[4],
+                        linewidth=2,
+                        edgecolor=(1.0, 1.0, 0.0, bounding_box[0]),
+                        facecolor='none'
+                    )
+                )
+
         # showing labels...
 
         # ... either as bounding boxes:
@@ -986,37 +1017,6 @@ def show_dataset_as_movie(
 
         else:
             raise Exception("Ill-conceived code.")
-
-        if also_show_predictions:
-            # showing predictions:
-
-            # computing the predicted bounding boxes for the current image:
-            predictions = convert_batched_bounding_boxes_to_final_format(
-                *(
-                    get_bounding_boxes_from_model_outputs(
-                        model_outputs=model(
-                            expand_dims(input=sample_and_label[0], axis=0)
-                        ),
-                        from_labels=False
-                    )
-                ),
-                predicting_online=True,
-                as_strings=False
-            )
-
-            # adding each predicted bounding box plot with brightness
-            # proportional to its confidence:
-            for bounding_box in predictions:
-                axes.add_patch(
-                    p=Rectangle(
-                        xy=(bounding_box[1], bounding_box[2]),
-                        width=bounding_box[3],
-                        height=bounding_box[4],
-                        linewidth=2,
-                        edgecolor=(1.0, 1.0, 0.0, 0.5*(1 + bounding_box[0])),
-                        facecolor='none'
-                    )
-                )
 
         # making the plot go adeah with the next frame after a small pause for
         # better observation:
