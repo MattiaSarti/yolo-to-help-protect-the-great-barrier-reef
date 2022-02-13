@@ -160,7 +160,7 @@ N_ANCHORS_PER_IMAGE = (
 (
     LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
     LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
-) = (0.5, 0.5)
+) = (0.9, 0.1)
 
 if __name__ != 'main_by_mattia':
     MODEL_PATH = path_join(
