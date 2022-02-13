@@ -22,6 +22,7 @@ from matplotlib.pyplot import (
 # pylint: disable=import-error,no-name-in-module
 from tensorflow.data import Dataset
 from tensorflow.keras import Model
+from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 # pylint: enable=import-error,no-name-in-module
 
@@ -51,6 +52,10 @@ EPOCHS_WHEN_VALIDATION_CARRIED_OUT = [
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
+    MODEL_DIR = path_join(
+        getcwd(),
+        'model'
+    )
     TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
         getcwd(),
         pardir,
@@ -58,6 +63,7 @@ if __name__ != 'main_by_mattia':
         'pictures'
     )
 else:
+    MODEL_DIR = getcwd()
     TRAINING_AND_VALIDATION_STATISTICS_DIR = getcwd()
 
 
@@ -69,8 +75,8 @@ def plot_and_save_training_and_validation_statistics(
         validation_metric_values: List[float],
 ) -> None:
     """
-    Plot and save the training and validation loss and metric trends with
-    epochs.
+    Plot and save the training and validation loss trends and validation
+    metric trend with epochs.
     """
     figure()
 
@@ -103,7 +109,7 @@ def plot_and_save_training_and_validation_statistics(
     savefig(
         fname=path_join(
             TRAINING_AND_VALIDATION_STATISTICS_DIR,
-            'Training and Validation Metric Trends.png'
+            'Validation Metric Trend.png'
         ),
         bbox_inches='tight'
     )
@@ -114,7 +120,7 @@ def plot_and_save_training_and_validation_statistics(
     close()
 
 
-def train_and_validate_model(
+def train_and_validate_and_save_model(
         model_instance: Model,
         training_set: Dataset,
         validation_set: Dataset
@@ -123,7 +129,8 @@ def train_and_validate_model(
     Compile (in TensorFlow's language acception, i.e. associate optimizer,
     loss function and metrics to) the input model instance and alternatively
     training and validating it on the respective input datasets, eventually
-    plotting and saving training and validation statistics.
+    plotting and saving training and validation statistics, and saving the
+    trained model itself, to the file system.
     """
     # the same optimizer is references throughout all the training procedure
     # so as not to lose its internal states/weights, since it's a stateful
@@ -156,6 +163,7 @@ def train_and_validate_model(
             x=training_set,
             epochs=1,
         )
+        # saving the current epoch's training loss value:
         training_loss_trend.append(trainin_history.history['loss'][0])
 
         if epoch_number in EPOCHS_WHEN_VALIDATION_CARRIED_OUT:
@@ -174,9 +182,17 @@ def train_and_validate_model(
             loss_and_metric = model_instance.evaluate(
                 x=validation_set
             )
+            # saving the current epoch's validation loss and metric values:
             validation_loss_trend.append(loss_and_metric[0])
             validation_metric_trend.append(loss_and_metric[1])
 
+    # saving the trained model:
+    model_instance.save(
+        filepath=MODEL_DIR,
+        overwrite=False
+    )
+
+    # plotting and saving the training and validation statistics:
     plot_and_save_training_and_validation_statistics(
         training_epoch_numbers=epoch_numbers,
         training_loss_values=training_loss_trend,
@@ -195,8 +211,11 @@ if __name__ == '__main__':
 
     model = YOLOv3Variant()
 
-    train_and_validate_model(
+    train_and_validate_and_save_model(
         model_instance=model,
         training_set=training_samples_and_labels.take(4),
         validation_set=validation_samples_and_labels.take(3)
     )
+
+    trained_model = load_model(filepath=MODEL_DIR)
+    assert model == trained_model

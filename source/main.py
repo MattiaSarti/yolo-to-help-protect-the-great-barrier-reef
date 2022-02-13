@@ -25,7 +25,7 @@ if __name__ != 'main_by_mattia':
         dataset_of_samples_and_model_outputs,
         split_dataset_into_batched_training_and_validation_sets
     )
-    from training_and_validation import train_and_validate_model
+    from training_and_validation import train_and_validate_and_save_model
 
 
 def fix_seeds_for_reproducible_results() -> None:
@@ -95,7 +95,7 @@ def main() -> None:
 
     model = create_model()
 
-    train_and_validate_model(
+    train_and_validate_and_save_model(
         model_instance=model,
         training_set=training_samples_and_labels,
         validation_set=validation_samples_and_labels
@@ -146,8 +146,10 @@ def time_it(description: str):
 create_model = time_it(description="MODEL INITIALIZED")(
     lambda: YOLOv3Variant()
 )
-train_and_validate_model = time_it(description="MODEL TRAINED AND VALIDATED")(
-    train_and_validate_model
+train_and_validate_and_save_model = time_it(
+    description="MODEL TRAINED, VALIDATED AND SAVED"
+)(
+    train_and_validate_and_save_model
 )
 infer_on_test_set_and_submit = time_it(description="PREDICTIONS MADE")(
     infer_on_test_set_and_submit
