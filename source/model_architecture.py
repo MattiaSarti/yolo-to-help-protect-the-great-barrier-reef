@@ -12,7 +12,8 @@ from tensorflow.keras.layers import (
     Convolution2D,
     LeakyReLU,
     MaxPooling2D,
-    Reshape
+    Reshape,
+    Resizing
 )
 from tensorflow.keras.layers.experimental.preprocessing import (
     RandomFlip,
@@ -23,7 +24,6 @@ from tensorflow.keras.layers.experimental.preprocessing import (
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
     from common_constants import (
-        DOWNSAMPLING_STEPS,
         IMAGE_N_CHANNELS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
@@ -44,18 +44,21 @@ CONVOLUTIONAL_LAYERS_COMMON_KWARGS = {
     'activation': None,
     'use_bias': True
 }
-FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 16  # TODO
+DOWNSAMPLING_STEPS = 3  # 4
+FIRST_LAYER_N_CONVOLUTIONAL_FILTERS = 64  # 16
 INPUT_NORMALIZATION_OFFSET = 0.0
 INPUT_NORMALIZATION_RESCALING_FACTOR = (1. / 255)
 LEAKY_RELU_NEGATIVE_SLOPE = 0.1
 N_CONVOLUTIONS_AT_SAME_RESOLUTION = 3
-N_CONVOLUTIONAL_FILTERS_INCREASE_FACTOR = 4  # 2
+N_CONVOLUTIONAL_FILTERS_INCREASE_FACTOR = 2
 POOLING_LAYERS_COMMON_KWARGS = {
     'pool_size': (2, 2),
     'strides': (2, 2),
     'padding': 'valid',
     'data_format': 'channels_last',
 }
+RESIZE = True
+RESIZING_INTERPOLATION = 'bilinear'
 
 
 class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-many-ancestors
@@ -103,6 +106,16 @@ class YOLOv3Variant(Model):  # noqa: E501 pylint: disable=abstract-method, too-m
             scale=INPUT_NORMALIZATION_RESCALING_FACTOR,
             offset=INPUT_NORMALIZATION_OFFSET
         )(inputs)
+
+        if RESIZE:
+            # resizing the input image by halving its width and height, so as
+            # to reduce the computational and resource burdens while also
+            # increasing the physical receptive fields:
+            outputs = Resizing(
+                height=round(IMAGE_N_ROWS / 2),
+                width=round(IMAGE_N_COLUMNS / 2),
+                interpolation=RESIZING_INTERPOLATION
+            )(outputs)
 
         # randomly flipping input images horizontally as a form of data
         # augmentation during training:
