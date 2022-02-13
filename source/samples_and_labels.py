@@ -1126,7 +1126,7 @@ if __name__ == '__main__':
     if SHOW_BOUNDING_BOXES_STATISTICS:
         inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
-    samples_n_bounding_boxes_dataset = ()
+    samples_n_bounding_boxes_dataset = dataset_of_samples_and_bounding_boxes()
 
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
