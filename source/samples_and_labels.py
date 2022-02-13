@@ -954,7 +954,7 @@ def show_dataset_as_movie(
                         width=bounding_box[3],
                         height=bounding_box[4],
                         linewidth=2,
-                        edgecolor=(1.0, 0.5, 0.0, bounding_box[0]),
+                        edgecolor=(1.0, 0.75, 0.0, bounding_box[0]),
                         facecolor='none'
                     )
                 )
