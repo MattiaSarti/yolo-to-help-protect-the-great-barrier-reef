@@ -6,8 +6,8 @@ __pycache__/
 !/source/cache/.gitkeep
 
 # trained model:
-/source/model/*
-!/source/model/.gitkeep
+/source/models/*
+!/source/models/.gitkeep
 
 # competition examples and dataset folder:
 /tensorflow-great-barrier-reef/

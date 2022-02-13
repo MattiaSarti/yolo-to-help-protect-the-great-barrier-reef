@@ -20,7 +20,7 @@ if __name__ != 'main_by_mattia':
         convert_batched_bounding_boxes_to_final_format,
         get_bounding_boxes_from_model_outputs
     )
-    from model_architecture import YOLOv3Variant
+    from model_architecture import build_yolov3_variant_architecture
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,
         split_dataset_into_batched_training_and_validation_sets
@@ -144,7 +144,7 @@ def time_it(description: str):
     split_dataset_into_batched_training_and_validation_sets
 )
 create_model = time_it(description="MODEL INITIALIZED")(
-    lambda: YOLOv3Variant()
+    lambda: build_yolov3_variant_architecture()
 )
 train_and_validate_and_save_model = time_it(
     description="MODEL TRAINED, VALIDATED AND SAVED"

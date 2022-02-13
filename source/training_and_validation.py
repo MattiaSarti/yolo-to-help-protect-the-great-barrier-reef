@@ -32,7 +32,7 @@ if __name__ != 'main_by_mattia':
         iou_threshold_averaged_f2_score,
         yolov3_variant_loss
     )
-    from model_architecture import YOLOv3Variant
+    from model_architecture import build_yolov3_variant_architecture
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,
         split_dataset_into_batched_training_and_validation_sets
@@ -52,9 +52,10 @@ EPOCHS_WHEN_VALIDATION_CARRIED_OUT = [
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
-    MODEL_DIR = path_join(
+    MODEL_PATH = path_join(
         getcwd(),
-        'model'
+        'models',
+        'model.h5'
     )
     TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
         getcwd(),
@@ -63,7 +64,7 @@ if __name__ != 'main_by_mattia':
         'pictures'
     )
 else:
-    MODEL_DIR = getcwd()
+    MODEL_PATH = path_join(getcwd(), 'model.h5')
     TRAINING_AND_VALIDATION_STATISTICS_DIR = getcwd()
 
 
@@ -188,7 +189,8 @@ def train_and_validate_and_save_model(
 
     # saving the trained model:
     model_instance.save(
-        filepath=MODEL_DIR,
+        filepath=MODEL_PATH,
+        save_format='h5',  # NOTE: necessary for data augmentation layers
         overwrite=False
     )
 
@@ -209,7 +211,7 @@ if __name__ == '__main__':
         training_plus_validation_set=dataset_of_samples_and_model_outputs()
     )
 
-    model = YOLOv3Variant()
+    model = build_yolov3_variant_architecture()
 
     train_and_validate_and_save_model(
         model_instance=model,
@@ -217,5 +219,8 @@ if __name__ == '__main__':
         validation_set=validation_samples_and_labels.take(3)
     )
 
-    trained_model = load_model(filepath=MODEL_DIR)
-    assert model == trained_model
+    del model
+    trained_model = load_model(
+        filepath=MODEL_PATH,
+        compile=False
+    )

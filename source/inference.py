@@ -40,7 +40,7 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_CELL_N_COLUMNS,
         OUTPUT_GRID_CELL_N_ROWS
     )
-    from model_architecture import YOLOv3Variant
+    from model_architecture import build_yolov3_variant_architecture
     from samples_and_labels import (
         dataset_of_samples_and_model_outputs,
         split_dataset_into_batched_training_and_validation_sets
@@ -532,7 +532,7 @@ if __name__ == '__main__':
         )
     )
 
-    model = YOLOv3Variant()
+    model = build_yolov3_variant_architecture()
 
     for samples_and_labels in training_samples_and_labels:
         print('\n' + '-'*90)
