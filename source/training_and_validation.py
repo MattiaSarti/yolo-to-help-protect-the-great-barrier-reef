@@ -12,6 +12,7 @@ from typing import List
 from matplotlib.pyplot import (
     close,
     figure,
+    legend,
     pause,
     plot,
     savefig,
@@ -81,11 +82,21 @@ def plot_and_save_training_and_validation_statistics(
     """
     figure()
 
-    plot(training_epoch_numbers, training_loss_values)
-    plot(validation_epoch_numbers, validation_loss_values, 'ro')
+    plot(
+        training_epoch_numbers,
+        training_loss_values,
+        label='training'
+    )
+    plot(
+        validation_epoch_numbers,
+        validation_loss_values,
+        'ro',
+        label='validation'
+    )
 
     xlabel(xlabel="Epoch Number")
     ylabel(ylabel="Loss")
+    legend()
 
     savefig(
         fname=path_join(
