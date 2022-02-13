@@ -29,6 +29,7 @@ from tensorflow.keras.optimizers import Adam
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
+    from common_constants import MODEL_PATH
     from loss_and_metrics import (
         iou_threshold_averaged_f2_score,
         yolov3_variant_loss
@@ -53,11 +54,6 @@ EPOCHS_WHEN_VALIDATION_CARRIED_OUT = [
 
 # only when running everything in a unified notebook on Kaggle's servers:
 if __name__ != 'main_by_mattia':
-    MODEL_PATH = path_join(
-        getcwd(),
-        'models',
-        'model.h5'
-    )
     TRAINING_AND_VALIDATION_STATISTICS_DIR = path_join(
         getcwd(),
         pardir,
@@ -65,7 +61,6 @@ if __name__ != 'main_by_mattia':
         'pictures'
     )
 else:
-    MODEL_PATH = path_join(getcwd(), 'model.h5')
     TRAINING_AND_VALIDATION_STATISTICS_DIR = getcwd()
 
 

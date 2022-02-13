@@ -30,9 +30,10 @@ from matplotlib.pyplot import (
 )
 from numpy import argmin, sum as np_sum, unravel_index, zeros
 # pylint: disable=import-error,no-name-in-module
-from tensorflow import convert_to_tensor, py_function, Tensor
+from tensorflow import convert_to_tensor, expand_dims, py_function, Tensor
 from tensorflow.data import AUTOTUNE, Dataset
 from tensorflow.io import decode_jpeg, read_file
+from tensorflow.keras.models import load_model
 # pylint: enable=import-error,no-name-in-module
 
 # only when running everything in a unified notebook on Kaggle's servers:
@@ -43,6 +44,7 @@ if __name__ != 'main_by_mattia':
         DATA_TYPE_FOR_OUTPUTS,
         IMAGE_N_COLUMNS,
         IMAGE_N_ROWS,
+        MODEL_PATH,
         N_ANCHORS_PER_CELL,
         N_OUTPUTS_PER_ANCHOR,
         OUTPUT_GRID_CELL_CENTERS_XY_COORDS,
@@ -51,6 +53,10 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_CELL_N_ROWS,
         OUTPUT_GRID_N_COLUMNS,
         OUTPUT_GRID_N_ROWS
+    )
+    from inference import (
+        convert_batched_bounding_boxes_to_final_format,
+        get_bounding_boxes_from_model_outputs
     )
 
 
@@ -100,6 +106,7 @@ PICTURES_DIR = path_join(
 
 SHOW_BOUNDING_BOXES_STATISTICS = False
 SHOW_DATASET_MOVIES = False
+SHOW_MODEL_IN_ACTION_MOVIE = True
 
 
 def get_cell_containing_bounding_box_center(
@@ -888,7 +895,8 @@ def split_dataset_into_batched_training_and_validation_sets(
 
 def show_dataset_as_movie(
         ordered_samples_and_labels: Dataset,
-        bounding_boxes_or_model_outputs: str = 'bounding_boxes'
+        bounding_boxes_or_model_cells: str = 'bounding_boxes',
+        also_show_predictions: bool = False
 ) -> None:
     """
     Show the dataset images frame by frame, reconstructing the video
@@ -896,8 +904,16 @@ def show_dataset_as_movie(
     sample/frame.
     """
     assert (
-        bounding_boxes_or_model_outputs in ('bounding_boxes', 'model_outputs')
-    ), "Invalid 'bounding_boxes_or_model_outputs' input."
+        bounding_boxes_or_model_cells in ('bounding_boxes', 'model_cells')
+    ), "Invalid 'bounding_boxes_or_model_cells' input."
+
+    # when also plotting predictions, loading the model in order to compute
+    # them:
+    if also_show_predictions:
+        model = load_model(
+            filepath=MODEL_PATH,
+            compile=False
+        )
 
     _, axes = subplots(1, 1)
 
@@ -915,7 +931,7 @@ def show_dataset_as_movie(
         # showing labels...
 
         # ... either as bounding boxes:
-        if bounding_boxes_or_model_outputs == 'bounding_boxes':
+        if bounding_boxes_or_model_cells == 'bounding_boxes':
             # for each bounding box:
             for bounding_box in sample_and_label[1].numpy().tolist():
                 # drawing the bounding box over the frame image:
@@ -931,7 +947,7 @@ def show_dataset_as_movie(
                 )
 
         # ... or as model output grid cells:
-        elif bounding_boxes_or_model_outputs == 'model_outputs':
+        elif bounding_boxes_or_model_cells == 'model_cells':
             # for each model output grid cell whose label contains anchors:
             for cell_row_index in range(OUTPUT_GRID_N_ROWS):
                 for cell_column_index in range(OUTPUT_GRID_N_COLUMNS):
@@ -963,13 +979,44 @@ def show_dataset_as_movie(
                             width=OUTPUT_GRID_CELL_N_COLUMNS,
                             height=OUTPUT_GRID_CELL_N_ROWS,
                             linewidth=2,
-                            edgecolor='#00ff00',
+                            edgecolor=(0.0, 1.0, 0.0),
                             facecolor='none'
                         )
                     )
 
         else:
             raise Exception("Ill-conceived code.")
+
+        if also_show_predictions:
+            # showing predictions:
+
+            # computing the predicted bounding boxes for the current image:
+            predictions = convert_batched_bounding_boxes_to_final_format(
+                *(
+                    get_bounding_boxes_from_model_outputs(
+                        model_outputs=model(
+                            expand_dims(input=sample_and_label[0], axis=0)
+                        ),
+                        from_labels=False
+                    )
+                ),
+                predicting_online=True,
+                as_strings=False
+            )
+
+            # adding each predicted bounding box plot with brightness
+            # proportional to its confidence:
+            for bounding_box in predictions:
+                axes.add_patch(
+                    p=Rectangle(
+                        xy=(bounding_box[1], bounding_box[2]),
+                        width=bounding_box[3],
+                        height=bounding_box[4],
+                        linewidth=2,
+                        edgecolor=(1.0, 1.0, 0.0, 0.5*(1 + bounding_box[0])),
+                        facecolor='none'
+                    )
+                )
 
         # making the plot go adeah with the next frame after a small pause for
         # better observation:
@@ -1079,12 +1126,12 @@ if __name__ == '__main__':
     if SHOW_BOUNDING_BOXES_STATISTICS:
         inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
-    samples_n_bounding_boxes_dataset = dataset_of_samples_and_bounding_boxes()
+    samples_n_bounding_boxes_dataset = ()
 
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
             ordered_samples_and_labels=samples_n_bounding_boxes_dataset,
-            bounding_boxes_or_model_outputs='bounding_boxes'
+            bounding_boxes_or_model_cells='bounding_boxes'
         )
 
     samples_n_model_outputs_dataset = dataset_of_samples_and_model_outputs(
@@ -1095,7 +1142,7 @@ if __name__ == '__main__':
     if SHOW_DATASET_MOVIES:
         show_dataset_as_movie(
             ordered_samples_and_labels=samples_n_model_outputs_dataset,
-            bounding_boxes_or_model_outputs='model_outputs'
+            bounding_boxes_or_model_cells='model_cells'
         )
 
     (
@@ -1103,3 +1150,10 @@ if __name__ == '__main__':
     ) = split_dataset_into_batched_training_and_validation_sets(
         training_plus_validation_set=samples_n_model_outputs_dataset
     )
+
+    if SHOW_MODEL_IN_ACTION_MOVIE:
+        show_dataset_as_movie(
+            ordered_samples_and_labels=samples_n_bounding_boxes_dataset,
+            bounding_boxes_or_model_cells='bounding_boxes',
+            also_show_predictions=True
+        )

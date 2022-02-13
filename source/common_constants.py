@@ -3,6 +3,8 @@ Convenient definitions of common constants.
 """
 
 
+from os import getcwd
+from os.path import join as path_join
 from typing import Tuple
 
 from numpy import arange, meshgrid, ndarray, stack
@@ -159,3 +161,12 @@ N_ANCHORS_PER_IMAGE = (
     LOSS_CONTRIBUTE_IMPORTANCE_OF_FULL_ANCHORS,
     LOSS_CONTRIBUTE_IMPORTANCE_OF_EMPTY_ANCHORS
 ) = (0.5, 0.5)
+
+if __name__ != 'main_by_mattia':
+    MODEL_PATH = path_join(
+        getcwd(),
+        'models',
+        'model.h5'
+    )
+else:
+    MODEL_PATH = path_join(getcwd(), 'model.h5')

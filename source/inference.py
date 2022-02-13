@@ -41,10 +41,6 @@ if __name__ != 'main_by_mattia':
         OUTPUT_GRID_CELL_N_ROWS
     )
     from model_architecture import build_yolov3_variant_architecture
-    from samples_and_labels import (
-        dataset_of_samples_and_model_outputs,
-        split_dataset_into_batched_training_and_validation_sets
-    )
 
 
 IOU_THRESHOLD_FOR_NON_MAXIMUM_SUPPRESSION = 0.5
@@ -524,6 +520,11 @@ def get_bounding_boxes_from_model_outputs(
 
 
 if __name__ == '__main__':
+    from samples_and_labels import (
+        dataset_of_samples_and_model_outputs,
+        split_dataset_into_batched_training_and_validation_sets
+    )
+
     (
         training_samples_and_labels, validation_samples_and_labels
     ) = split_dataset_into_batched_training_and_validation_sets(
