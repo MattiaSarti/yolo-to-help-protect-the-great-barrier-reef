@@ -911,12 +911,20 @@ def show_dataset_as_movie(
 
     # when only considering pre-selected frames:
     if show_only_selection:
-        indexes_in_selection = (  # TODO
-            [index for index in range(16, 20)]
-            + [index for index in range(235, 239)]
-            + [index for index in range(642, 648)]
-            + [index for index in range(782, 793)]
-            + [index for index in range(1280, 1289)]
+        indexes_in_selection = (
+            [index for index in range(13, 30)]
+            + [index for index in range(234, 248)]
+            + [index for index in range(642, 652)]
+            + [index for index in range(782, 792)]
+            + [index for index in range(2681, 2688)]
+            + [index for index in range(4760, 4769)]
+            + [index for index in range(7320, 7332)]
+            + [index for index in range(9327, 9346)]
+            + [index for index in range(12671, 12683)]
+            + [index for index in range(16772, 16782)]
+            + [index for index in range(19674, 19684)]
+            + [index for index in range(20142, 20161)]
+            + [index for index in range(23361, 23371)]
         )
 
     # when also plotting predictions, loading the model in order to compute
@@ -939,6 +947,8 @@ def show_dataset_as_movie(
 
         # clearing axes from the previous frame information:
         axes.clear()
+
+        axes.set_title(label="Frame index: " + str(index))
 
         # showing the image:
         axes.imshow(sample_and_label[0].numpy())
