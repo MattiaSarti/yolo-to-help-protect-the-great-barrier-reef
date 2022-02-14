@@ -37,7 +37,7 @@ Looking at the root directory of the repository:
 
 ## ...
 
-**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. Only low-resolution screenshots of some example as displayed in this README.
+**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. Only low-resolution screenshots of some example as displayed in this README. [link .gitignore]
 
 
 ## ...
