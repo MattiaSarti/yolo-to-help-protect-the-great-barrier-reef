@@ -17,7 +17,7 @@ The competition results were evaluated in terms of a metric that represents the 
 I obtained a score of **TODO** on the competition test set, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
 
 #### A Video Example of My Model in Action:
-**TODO**
+![](/raw/docs/pictures/video-example.mp4))
 
 
 ## This Repository Structure
