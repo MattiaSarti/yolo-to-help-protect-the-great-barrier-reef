@@ -896,7 +896,9 @@ def split_dataset_into_batched_training_and_validation_sets(
 def show_dataset_as_movie(
         ordered_samples_and_labels: Dataset,
         bounding_boxes_or_model_cells: str = 'bounding_boxes',
-        also_show_predictions: bool = False
+        also_show_predictions: bool = False,
+        show_only_selection: bool = False,
+        save: bool = False
 ) -> None:
     """
     Show the dataset images frame by frame, reconstructing the video
@@ -906,6 +908,16 @@ def show_dataset_as_movie(
     assert (
         bounding_boxes_or_model_cells in ('bounding_boxes', 'model_cells')
     ), "Invalid 'bounding_boxes_or_model_cells' input."
+
+    # when only considering pre-selected frames:
+    if show_only_selection:
+        indexes_in_selection = (  # TODO
+            [index for index in range(16, 20)]
+            + [index for index in range(235, 239)]
+            + [index for index in range(642, 648)]
+            + [index for index in range(782, 793)]
+            + [index for index in range(1280, 1289)]
+        )
 
     # when also plotting predictions, loading the model in order to compute
     # them:
@@ -920,7 +932,10 @@ def show_dataset_as_movie(
     # for each sample-label pair, a frame fusing them together is shown:
     for index, sample_and_label in enumerate(ordered_samples_and_labels):
         if index % 1000 == 0:
-            print(f"{index} frames shown")
+            print(f"{index} frames iterated through")
+        if show_only_selection:
+            if index not in indexes_in_selection:
+                continue
 
         # clearing axes from the previous frame information:
         axes.clear()
@@ -1017,6 +1032,18 @@ def show_dataset_as_movie(
 
         else:
             raise Exception("Ill-conceived code.")
+
+        if save:
+            # saving the resulting plot (of bounding boxes over the considered
+            # frame):
+            plt_savefig(
+                fname=path_join(
+                    PICTURES_DIR,
+                    'video-example',
+                    str(index).zfill(5) + '.png'
+                ),
+                bbox_inches='tight'
+            )
 
         # making the plot go adeah with the next frame after a small pause for
         # better observation:
@@ -1155,5 +1182,7 @@ if __name__ == '__main__':
         show_dataset_as_movie(
             ordered_samples_and_labels=samples_n_bounding_boxes_dataset,
             bounding_boxes_or_model_cells='bounding_boxes',
-            also_show_predictions=True
+            also_show_predictions=True,
+            show_only_selection=True,
+            save=True
         )
