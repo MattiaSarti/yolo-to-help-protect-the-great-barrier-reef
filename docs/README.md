@@ -17,7 +17,7 @@ The competition results were evaluated in terms of a metric that represents the 
 I obtained a score of **TODO** on the competition test set, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
 
 #### A Video Example of My Model in Action:
-![](/raw/docs/pictures/video-example.mp4))
+<img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/video-example.gif">
 
 
 ## This Repository Structure
