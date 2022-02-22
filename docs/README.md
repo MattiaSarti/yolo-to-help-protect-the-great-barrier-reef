@@ -3,7 +3,7 @@
     TensorFlow - Help Protect the Great Barrier Reef<br>
 </h1>
 
-Unfortunately, I discovered and enrolled [this wonderful Kaggle competition](https://www.kaggle.com/c/tensorflow-great-barrier-reef) too late, when it was about to end. But I took the opportunity of working with such a visually pleasant dataset anyway to learn by **implementing and training** a new variant of **YOLO** (specifically of v3) myself **completely from scratch**.
+Unfortunately, I discovered [this wonderful Kaggle competition](https://www.kaggle.com/c/tensorflow-great-barrier-reef) too late, when it was about to end. But I took the opportunity of working with such a visually pleasant dataset anyway to learn by **implementing and training** a new variant of **YOLO** (specifically of v3) myself **completely from scratch**.
 
 #### A Video Example of My Model in Action:
 <img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
