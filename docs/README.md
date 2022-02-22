@@ -5,7 +5,7 @@
 </h1>
 
 Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of the whole competition time left.<br>
-But I decided to take the opportunity of working with such a visually beautiful dataset anyway, to learn by **implementing** a new version of **YOLO** (specifically a variant of v3) myself **completely from scratch**, having fun exploring the dataset, defining the model, training it and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models.<br>
+But I decided to take the opportunity of working with such a visually beautiful dataset anyway, to learn by **implementing** a new version of **YOLO** (specifically a variant of v3) myself **completely from scratch**, having fun exploring the dataset, defining the model, training it and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models, preprocessing and postprocessing.<br>
 I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline of my model.<br>
 
 
