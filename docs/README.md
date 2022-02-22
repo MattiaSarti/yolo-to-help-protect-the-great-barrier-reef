@@ -4,17 +4,12 @@
     🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
 </h1>
 
-Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of the whole competition time left.<br>
-But I decided to take the opportunity of working with such a visually beautiful dataset anyway, to learn by **implementing** a new version of **YOLO** (specifically a variant of v3) myself **completely from scratch**, having fun exploring the dataset, defining the model, training it and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models, preprocessing and postprocessing.<br>
-I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline of my model.<br>
+Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of competition time left. But I took the opportunity of working with such a visually beautiful dataset anyway to learn by **implementing** a new variant of **YOLO** (specifically of v3) myself **completely from scratch**, enjoying exploring the dataset, defining the model, training it and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models, preprocessing and postprocessing. I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline model.<br>
 
 
 ## The Competition (Briefly)
 
-[This](https://www.kaggle.com/c/tensorflow-great-barrier-reef) is the competition considered.<br>
-The aim is to implement a single-class object detection algorithm, to distinguish a given kind of starfish in underwater video frames, that can be both trained and applyed for inferences on the test set within the computational limits given.<br>
-The competition results were evaluated in terms of a metric that represents the F2 score, as they decided to favor recall twice as much as precision, avereaged over different IoU thresholds for considering bounding boxes as detected or not, with these thresholds being: {0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8}.<br>
-I obtained a score of **TODO** on the competition test set, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
+[The competition](https://www.kaggle.com/c/tensorflow-great-barrier-reef) aim was to implement a single-class object detection algorithm to distinguish a given kind of starfish in underwater video frames - that could be both trained and applied for inferences on the test set within the given computational limits. Such test set predictions were evaluated in terms of a metric that represents the F2 score (as they decided to favor recall twice as much as precision) avereaged over different IoU thresholds for considering bounding boxes as detected correctly or not. I reached a test metric of 0.142, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
 
 #### A Video Example of My Model in Action:
 <img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
