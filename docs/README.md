@@ -1,18 +1,24 @@
 <h1 align="center">
     YOLO for a Kaggle Competition:<br>
     TensorFlow - Help Protect the Great Barrier Reef<br>
-    🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
 </h1>
 
-Unfortunately, I discovered and enrolled this wonderful competition too late, with only a minimal fraction of competition time left. But I took the opportunity of working with such a visually beautiful dataset anyway to learn by **implementing** a new variant of **YOLO** (specifically of v3) myself **completely from scratch**, enjoying exploring the dataset, defining the model, training it and evaluating it while knowing in advance there was not time for extensive hyperparameter tunings and for experimenting with different models, preprocessing and postprocessing. I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline model.<br>
+Unfortunately, I discovered and enrolled this wonderful competition too late, when it was about to end. But I took the opportunity of working with such a visually pleasant dataset anyway to learn by **implementing** a new variant of **YOLO** (specifically of v3) myself **completely from scratch**.
+
+#### A Video Example of My Model in Action:
+<img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
+
+
+# ...
+<h3 align="center">
+    🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
+</h3>
+I enjoyed exploring the dataset, defining the model, training it and evaluating it, while knowing beforehand that there was not enough time for extensive hyperparameter tunings and for experimenting with different model architectures, preprocessing and postprocessing steps.<br>I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline model.
 
 
 ## The Competition (Briefly)
 
 [The competition](https://www.kaggle.com/c/tensorflow-great-barrier-reef) aim was to implement a single-class object detection algorithm to distinguish a given kind of starfish in underwater video frames - that could be both trained and applied for inferences on the test set within the given computational limits. Such test set predictions were evaluated in terms of a metric that represents the F2 score (as they decided to favor recall twice as much as precision) avereaged over different IoU thresholds for considering bounding boxes as detected correctly or not. I reached a test metric of 0.142, and a visual taste of what this score means in terms of the resulting model capabilities follows.<br>
-
-#### A Video Example of My Model in Action:
-<img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
 
 
 ## This Repository Structure
@@ -32,7 +38,7 @@ Looking at the root directory of the repository:
 
 ## ...
 
-**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. Only low-resolution screenshots of some example as displayed in this README. [link .gitignore]
+**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. [link .gitignore]. Only low-resolution screenshots of some examples as displayed in this README.
 
 
 ## ...
