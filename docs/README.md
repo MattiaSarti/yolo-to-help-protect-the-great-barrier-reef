@@ -16,7 +16,7 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 <img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
 
 🟩 expected bounding boxes (ground truth)
-🟧 predicted bounding boxes, with transparency inversely proportional to their confidence
+🟧 predicted bounding boxes, with opacity ∝ confidence
 
 
 ## The Competition (Briefly)
