@@ -13,9 +13,9 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 
 #### A Video Example of My Model in Action:
 
-<img align="left" style="width: auto; height: 400px; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
+<img align="left" style="width: auto; height: 420px; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
 
-<p align="right" style"width: auto; height: 400px;">
+<p align="right" style"width: auto; height: 420px;">
     <br><br><br><br>
     🟩 expected bounding boxes<br>(ground truth)
     <br><br><br>
