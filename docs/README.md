@@ -12,13 +12,11 @@ Unfortunately, I discovered [this wonderful Kaggle competition](https://www.kagg
 I enjoyed exploring the dataset, defining the model, training it and evaluating it, while knowing beforehand that there was not enough time for extensive hyperparameter tunings and for experimenting with different model architectures, preprocessing and postprocessing steps. I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline model.
 
 #### A Video Example of My Model in Action:
+
 <img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
 
-#### Legend:
-```diff
-+ expected bounding boxes, given as ground truth
-! predicted bounding boxes (transparency inversely proportional to their confidence)
-```
+🟩 expected bounding boxes (ground truth)
+🟧 predicted bounding boxes, with transparency inversely proportional to their confidence
 
 
 ## The Competition (Briefly)
