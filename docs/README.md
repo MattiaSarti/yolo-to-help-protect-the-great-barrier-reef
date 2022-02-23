@@ -9,7 +9,7 @@ Unfortunately, I discovered [this wonderful Kaggle competition](https://www.kagg
     🦈🐬🦭🐳🐋🐟🐠🐡🦑🐙🦐🦞🦀🐚🪨🌊🏝️🏖️🐢⛱️💦💧
 </h3>
 
-I enjoyed exploring the dataset, defining the model, training it and evaluating it, while knowing beforehand that there was not enough time for extensive hyperparameter tunings and for experimenting with different model architectures, preprocessing and postprocessing steps. I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so this repository only contains what I quickly created over a bunch of days: a baseline model.
+I enjoyed exploring the dataset, defining the model, training it and evaluating it, while knowing beforehand that there was not enough time for extensive hyperparameter tunings and for experimenting with different model architectures, preprocessing and postprocessing steps. I froze all of my code as soon as the competition ended - this README is the only file that I kept modifying after my final submission - so **this repository only contains what I quickly created over a bunch of days: a baseline model**.
 
 #### A Video Example of My Model in Action:
 
