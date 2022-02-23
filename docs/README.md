@@ -13,10 +13,15 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 
 #### A Video Example of My Model in Action:
 
-<img style="width: 900px; height: auto; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
+<img align="left" style="width: auto; height: 550px; display: block; margin-left: auto; margin-right: auto;" class="animated-gif" src="https://github.com/MattiaSarti/yolo-to-help-protect-the-great-barrier-reef/raw/main/docs/pictures/video-example.gif">
 
-🟩 expected bounding boxes (ground truth)
-🟧 predicted bounding boxes, with opacity ∝ confidence
+<p align="right" style"width: auto; height: 550px;">
+    <br><br><br><br><br><br><br>
+    🟩 expected bounding boxes<br>(ground truth)
+    <br><br><br>
+    🟧 predicted bounding boxes,<br>opacity ∝ confidence
+    <br><br><br><br><br><br><br>
+</p>
 
 
 ## The Competition (Briefly)
