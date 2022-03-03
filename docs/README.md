@@ -36,7 +36,7 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 
 ## This Repository Structure
 
-Looking at the root directory of the repository:
+Looking at this repository:
 - the folder [**/kaggle**](/kaggle) contains:
     - [the command used to download the dataset](...)
     - [the command used to create the submitted notebook assembling all the different source files](...)
