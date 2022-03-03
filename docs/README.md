@@ -44,12 +44,24 @@ Looking at the root directory of the repository:
 **TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
 
 
-## ...
+## Dataset & Bounding Boxes Statistics:
 
-**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. [link .gitignore]. Only low-resolution screenshots of some examples as displayed in this README.
+Inspected by running, from inside the repository folder **/source**, the following python commands...
 
+<details>
+<summary>Commands</summary>
 
-## ...
+```
+from samples_and_labels import inspect_bounding_boxes_statistics_on_training_n_validation_set
+inspect_bounding_boxes_statistics_on_training_n_validation_set()
+```
+
+</details>
+
+...which print to standard output the following resume summarizing all inspected statistics:
+
+<details>
+<summary>Statistics</summary>
 
 ```
 Bounding Boxes' Statistics:
@@ -79,3 +91,10 @@ Bounding Boxes' Statistics:
         - histogram of bounding boxes' centers x-coord distance [pixels]: see plot
         - histogram of bounding boxes' centers y-coord distance [pixels]: see plot
 ```
+
+</details>
+
+
+## ...
+
+**NOTE**: I am sharing neither the competition dataset not any trained model among this repository's files, according to Kaggle's regulations. [link .gitignore]. Only low-resolution screenshots of some examples as displayed in this README.
