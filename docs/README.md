@@ -32,11 +32,16 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 ## This Repository Structure
 
 Looking at the root directory of the repository:
-- the folder **/kaggle** contains [the command used to download the dataset](...), [the command used to create the submitted notebook assembling all the different source files](...) and [the final, submitted notebook](...)
-- the folder **/source** contains all and only the source code compressed in the above-mentioned final submitted notebook, but split into different files for the sake of maintainability
-- the folder **/docs/pictures** is just a folder that contains small memories that give a taste of the competition, since the dataset can not be publicly shared
-- the file **/docs/TODO.md** is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
-- the file **/docs/README.md** is what you are reading now
+- the folder [**/kaggle**](/kaggle) contains:
+    - [the command used to download the dataset](...)
+    - [the command used to create the submitted notebook assembling all the different source files](...)
+    - [the final, submitted notebook](...)
+- the folder [**/source**](/source) contains all and only the source code compressed in the above-mentioned final submitted notebook, but split into different files for the sake of maintainability:
+    - ...
+    - ...
+- the folder [**/docs/pictures**](/docs/pictures) contains  small memories that give a taste of the competition, since the dataset can not be publicly shared
+- the file [**/docs/TODO.md**](/docs/TODO.md) is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
+- the file [**/docs/README.md**](/docs/README.md) represents what you are reading now
 
 
 ## Innovative Aspects
@@ -58,7 +63,7 @@ inspect_bounding_boxes_statistics_on_training_n_validation_set()
 
 </details>
 
-...which print to standard output the following resume summarizing all inspected statistics:
+...which print to standard outputand save to **/docs/pictures** respectively the following resume and the following visual plots, together summarizing all inspected statistics:
 
 <details>
 <summary>Statistics</summary>
@@ -91,6 +96,10 @@ Bounding Boxes' Statistics:
         - histogram of bounding boxes' centers x-coord distance [pixels]: see plot
         - histogram of bounding boxes' centers y-coord distance [pixels]: see plot
 ```
+<img src="/docs/pictures/Histogram of Bounding Boxes' Centers Distance [pixels].png">
+<img src="/docs/pictures/Histogram of Bounding Boxes' Centers X-Coordinate Distance [pixels].png">
+<img src="/docs/pictures/Histogram of Bounding Boxes' Centers Y-Coordinate Distance [pixels].png">
+<img src="/docs/pictures/Histogram of Number of Bounding Boxes per Image.png">
 
 </details>
 
