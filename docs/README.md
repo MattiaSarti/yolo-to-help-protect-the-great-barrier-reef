@@ -111,4 +111,4 @@ Bounding Boxes' Statistics:
 
 ## Compliance
 
-I am sharing neither the competition dataset nor any trained model, according to Kaggle's rules (as confirmed [here](/.gitignore)). Only low-resolution pictures of few examples as employed for this documentation.
+I am sharing neither the competition dataset nor any trained model, according to Kaggle's rules (as confirmed [here](/.gitignore)). Only low-resolution pictures of few examples are employed for this documentation.
