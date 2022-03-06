@@ -61,11 +61,19 @@ All results are perfectly reproducible since all the seeds of all the stochastic
 ```
 pip install -r requirements.txt
 ```
-After installing such requirements, enter the [/kaggle](/kaggle) folder in the root of the repository and run the following command to generate the final notebook by assembling all the code spread across the different source files:
-```
-generate_notebook_from_source.py
-```
-Finally, load and execute the whole notebook as is on Kaggle (in the competition workspace).
+After installing such requirements,<br>
+either:
+- enter the [/kaggle](/kaggle) folder in the root of the repository and run the following command to generate the final notebook by assembling all the code spread across the different source files:
+    ```
+    generate_notebook_from_source.py
+    ```
+    and then load and execute the whole notebook as is on Kaggle (in the competition workspace)
+
+or:
+- enter the [/source](/source) folder in the root of the repository and run the following command to run everything locally, (assuming you have somehow access to the competition workspace to infer on the test set):
+    ```
+    python main.py
+    ```
 
 
 ## Dataset & Bounding Boxes Statistics:
