@@ -38,15 +38,21 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 
 Looking at this repository:
 - the folder [**/kaggle**](/kaggle) contains:
-    - [the command used to download the dataset](...)
-    - [the command used to create the submitted notebook assembling all the different source files](...)
-    - [the final, submitted notebook](...)
-- the folder [**/source**](/source) contains all and only the source code compressed in the above-mentioned final submitted notebook, but split into different files for the sake of maintainability:
-    - ...
-    - ...
-- the folder [**/docs/pictures**](/docs/pictures) contains  small memories that give a taste of the competition, since the dataset can not be publicly shared
-- the file [**/docs/TODO.md**](/docs/TODO.md) is a collection of TODOs annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
-- the file [**/docs/README.md**](/docs/README.md) represents what you are reading now
+    - the [commands used to download the dataset](/kaggle/competition_data_download_commands.txt)
+    - the [script employed to create the submitted notebook](/kaggle/generate_notebook_from_source.py) by assembling all the different source files
+    - the [final, submitted notebook](/kaggle/submitted_notebook.ipynb)
+- the folder [**/source**](/source) contains all and only the source code compressed in the above-mentioned final submitted notebook, but split into different files for the sake of maintainability, respectively for:
+    - [common definitions](/source/common_constants.py)
+    - [samples/labels extraction and inspection](/source/samples_and_labels.py)
+    - [model architecture](/source/model_architecture.py)
+    - [loss function and metric(s)](/source/loss_and_metrics.py)
+    - [inference postprocessing](/source/inference.py)
+    - [training and validation](/source/training_and_validation.py)
+    - [running everything, from training to submitting predicitons on the test set](/source/main.py)
+- the folder [**/docs**](/docs) contains:
+    - a [collection of TODOs](/docs/TODO.md) annotated and checked by myself during the competition solution development to note down and remember key thoughts of mine
+    - the [documentation](/docs/README.md) that you are reading now
+    - a [subfolder](/docs/pictures) containing pictures and visual results saved for documentation purposes (and small memories that give a taste of the competition, since the dataset can not be publicly shared)
 
 
 ## Innovative Aspects
