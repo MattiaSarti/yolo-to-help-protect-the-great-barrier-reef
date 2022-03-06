@@ -29,9 +29,9 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 [The competition](https://www.kaggle.com/c/tensorflow-great-barrier-reef) aim was to implement a single-class object detection algorithm to distinguish a given kind of starfish in underwater video frames - that could be both trained and applied for inferences on the test set within the given computational limits. Such test set predictions were evaluated in terms of a metric that represents the F2 score (as they decided to favor recall twice as much as precision) avereaged over different IoU thresholds for considering bounding boxes as detected correctly or not. I reached a test metric of 0.142, and a visual taste of what this score means in terms of the resulting model capabilities follows.  **TODO**
 
 
-## Reproducing My Results
+## Innovative Aspects
 
-**TODO**
+**TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
 
 
 ## This Repository Structure
@@ -55,9 +55,17 @@ Looking at this repository:
     - a [subfolder](/docs/pictures) containing pictures and visual results saved for documentation purposes (and small memories that give a taste of the competition, since the dataset can not be publicly shared)
 
 
-## Innovative Aspects
+## Reproducing My Results
 
-**TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
+All results are perfectly reproducible since all the seeds of all the stochastic components at stake are fixed in a purely deterministic fashion. Python 3.8.0 was employed, and the required Python modules can be installed via pip 21.3.1 by running from the root folder of the repository the following command:
+```
+pip install -r requirements.txt
+```
+After installing such requirements, enter the [/kaggle](/kaggle) folder in the root of the repository and run the following command to generate the final notebook by assembling all the code spread across the different source files:
+```
+generate_notebook_from_source.py
+```
+Finally, load and execute the whole notebook as is on Kaggle (in the competition workspace).
 
 
 ## Dataset & Bounding Boxes Statistics:
