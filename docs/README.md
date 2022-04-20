@@ -31,7 +31,7 @@ I enjoyed exploring the dataset, defining the model, training it and evaluating 
 
 ## Innovative Aspects
 
-**TODO** anchors intended only as different relative shapes, in terms of ratio between width and height, to assign bounding boxes that could fall within the same cell to different positions in the anchor dimension of labels, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors
+Anchors - whom bounding boxes that could fall within the same cell are assigned to, for further differentiation - are here intended only as different relative shapes, in terms of ratio between bounding box width and height, letting the different model outputs for the different anchors specialize at predicting with different aspect ratios by themselves, as an alternative to the traditional strategy of forcing them to predict values on the same scale first and then rescaling them according to anchors.
 
 
 ## This Repository Structure
